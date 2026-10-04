@@ -50,6 +50,32 @@ def teardown_module():
     if _server_thread:
         _server_thread.stop()
 
+    # Re-seed sample demonstration invoices so Web Portal is populated after test runs
+    async def _restore_demo_invoices():
+        from datetime import datetime, timezone
+        now = datetime.now(timezone.utc).isoformat()
+        samples = [
+            ("Acme Corp", "INV-2024-001", 1500.00, "USD", "2026-10-15", "approved", "[]", "Consulting Services - December", now),
+            ("Globex Corporation", "GLX-7892", 3250.75, "USD", "2026-10-30", "verified", "[]", "Q3 Cloud Infrastructure Support", now),
+            ("Cyberdyne Systems", "CS-2026-881", 4850.00, "USD", "2026-11-15", "pending", "[]", "Neural Net Training Cluster Subscriptions", now),
+            ("Initech", "INIT-2026-99", 2100.50, "USD", "2026-11-20", "pending", "[]", "Quarterly TPS Software Licenses", now),
+        ]
+        async with aiosqlite.connect(settings.database_path) as conn:
+            for inv in samples:
+                try:
+                    await conn.execute(
+                        """
+                        INSERT INTO invoices (vendor_name, invoice_number, amount, currency, due_date, status, line_items_json, notes, created_at)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        """,
+                        inv,
+                    )
+                except Exception:
+                    pass
+            await conn.commit()
+
+    asyncio.run(_restore_demo_invoices())
+
 
 def setup_function():
     # Clear invoices before each test to guarantee fresh, non-conflicting state
