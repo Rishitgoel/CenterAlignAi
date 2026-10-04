@@ -1,6 +1,7 @@
 import asyncio
 import json
 import logging
+from pathlib import Path
 import re
 from typing import Any, Dict, List, Optional
 import warnings
@@ -154,88 +155,63 @@ class Planner:
 
         if not file_match:
             # Direct natural language instruction with parameters in prompt (no file)
-            vendor_match = re.search(r"(?:for|vendor|company)\s+([A-Z][A-Za-z0-9\s&]+?)(?:,|\swith|\samount|\sinvoice|\sdue|\sfor|\s\$|\.|$)", task, re.IGNORECASE)
-            vendor_name = vendor_match.group(1).strip() if vendor_match else "Wayne Enterprises"
+            vendor_match = re.search(r"(?:for|vendor|company)\s+([A-Za-z0-9\s&]+?)(?:,|\swith|\sfor|\samount|\sinvoice|\sdue|\s\$|\.|$)", task, re.IGNORECASE)
+            vendor_name = vendor_match.group(1).strip().title() if vendor_match else "Nabhas Aircon"
 
-            amount_match = re.search(r"(?:amount(?:\sof|:|\s)?\s*\$?|\$)\s*([0-9]+(?:\.[0-9]+)?)", task, re.IGNORECASE)
-            amount = float(amount_match.group(1)) if amount_match else 2500.0
+            # Comprehensive amount extraction: "$40000", "40000 amount", "amount of 40000", "for 40000"
+            amount = None
+            m = re.search(r"\$\s*([0-9][0-9,]*\.?[0-9]*)", task)
+            if m:
+                amount = float(m.group(1).replace(",", ""))
+            if amount is None:
+                m = re.search(r"([0-9][0-9,]*\.?[0-9]*)\s*(?:amount|dollars|usd|rs|inr|k\b)", task, re.IGNORECASE)
+                if m:
+                    amount = float(m.group(1).replace(",", ""))
+            if amount is None:
+                m = re.search(r"amount\s*(?:of|:|\s)?\s*([0-9][0-9,]*\.?[0-9]*)", task, re.IGNORECASE)
+                if m:
+                    amount = float(m.group(1).replace(",", ""))
+            if amount is None:
+                m = re.search(r"(?:for|total|worth)\s+([0-9][0-9,]*\.?[0-9]*)", task, re.IGNORECASE)
+                if m:
+                    amount = float(m.group(1).replace(",", ""))
+            if amount is None:
+                amount = 2500.0
 
             inv_match = re.search(r"(?:invoice(?:\s*(?:number|num|id|#))(?:\s*[:=]?\s*|\s+))([A-Za-z0-9-_]+)", task, re.IGNORECASE)
             if not inv_match:
                 inv_match = re.search(r"\b(INV-[A-Za-z0-9-_]+|#[0-9]+)\b", task, re.IGNORECASE)
             invoice_number = inv_match.group(1).replace("#", "").strip() if inv_match else f"INV-{abs(hash(task)) % 100000}"
 
-            date_match = re.search(r"(\d{4}-\d{2}-\d{2})", task)
-            due_date = date_match.group(1) if date_match else "2026-11-30"
-
-            if use_browser:
-                return TaskPlan(
-                    goal=task,
-                    steps=[
-                        PlannedStep(
-                            step_number=1,
-                            description=f"Navigate to company web portal and submit invoice for {vendor_name} (${amount:,.2f})",
-                            tool_name="browser_operator",
-                            tool_input={
-                                "action": "enter_invoice_form",
-                                "form_data": {
-                                    "vendor_name": vendor_name,
-                                    "invoice_number": invoice_number,
-                                    "amount": amount,
-                                    "due_date": due_date,
-                                    "notes": "Submitted directly via CentrAlign Autonomous Web Worker",
-                                },
-                                "headless": True,
-                                "screenshot_path": "logs/portal_submission_screenshot.png",
-                            },
-                            verification_hint="Verify modal submission and toast confirmation banner",
-                        ),
-                        PlannedStep(
-                            step_number=2,
-                            description="Write task audit trail and completion report",
-                            tool_name="file_writer",
-                            tool_input={
-                                "file_path": "logs/browser_task_completion_report.md",
-                                "content": f"Invoice entry completed via Playwright browser operator for {vendor_name} (Invoice #{invoice_number}). Amount: ${amount}.",
-                            },
-                            depends_on=1,
-                            verification_hint="Confirm completion report exists on disk",
-                        ),
-                    ],
-                )
+            # Relative & absolute date parsing: "after one month", "after 1 week", "YYYY-MM-DD"
+            from datetime import datetime, timezone, timedelta
+            today = datetime.now(timezone.utc)
+            if re.search(r"(?:one|1|a)\s*mo(?:nth|th)", task, re.IGNORECASE):
+                due_date = (today + timedelta(days=30)).strftime("%Y-%m-%d")
+            elif re.search(r"(?:two|2)\s*months", task, re.IGNORECASE):
+                due_date = (today + timedelta(days=60)).strftime("%Y-%m-%d")
+            elif re.search(r"(?:one|1)\s*week", task, re.IGNORECASE):
+                due_date = (today + timedelta(days=7)).strftime("%Y-%m-%d")
+            elif re.search(r"(?:two|2)\s*weeks", task, re.IGNORECASE):
+                due_date = (today + timedelta(days=14)).strftime("%Y-%m-%d")
+            elif re.search(r"(\d{4}-\d{2}-\d{2})", task):
+                due_date = re.search(r"(\d{4}-\d{2}-\d{2})", task).group(1)
             else:
-                return TaskPlan(
-                    goal=task,
-                    steps=[
-                        PlannedStep(
-                            step_number=1,
-                            description=f"Enter invoice for {vendor_name} (${amount:,.2f}) into internal ERP system",
-                            tool_name="erp_client",
-                            tool_input={
-                                "action": "create_invoice",
-                                "invoice_data": {
-                                    "vendor_name": vendor_name,
-                                    "invoice_number": invoice_number,
-                                    "amount": amount,
-                                    "due_date": due_date,
-                                    "currency": "USD",
-                                },
-                            },
-                            verification_hint="Check response contains created invoice ID",
-                        ),
-                        PlannedStep(
-                            step_number=2,
-                            description="Write task audit trail and completion report",
-                            tool_name="file_writer",
-                            tool_input={
-                                "file_path": "logs/task_completion_report.md",
-                                "content": f"Invoice entry completed successfully for {vendor_name} (Invoice #{invoice_number}). Amount: ${amount}.",
-                            },
-                            depends_on=1,
-                            verification_hint="Confirm completion report exists on disk",
-                        ),
-                    ],
-                )
+                due_date = (today + timedelta(days=30)).strftime("%Y-%m-%d")
+
+            # Materialize a draft invoice file so that all standard audit, extraction, and HITL gates run
+            draft_path = Path("logs") / "draft_invoice.json"
+            draft_path.parent.mkdir(parents=True, exist_ok=True)
+            draft_data = {
+                "vendor_name": vendor_name,
+                "invoice_number": invoice_number,
+                "amount": amount,
+                "due_date": due_date,
+                "currency": "USD",
+                "notes": f"Generated from direct task instruction: {task}"
+            }
+            draft_path.write_text(json.dumps(draft_data, indent=2), encoding="utf-8")
+            file_match = re.search(r"(logs/draft_invoice\.json)", "logs/draft_invoice.json")
 
         file_path = file_match.group(1)
 
