@@ -181,3 +181,11 @@ async def get_vendors() -> List[VendorRecord]:
                 )
                 for r in rows
             ]
+
+
+async def clear_database():
+    """Clears all invoice records for clean test/benchmark execution."""
+    async with get_connection() as conn:
+        await conn.execute("DELETE FROM invoices")
+        await conn.commit()
+

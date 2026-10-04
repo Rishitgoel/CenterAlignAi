@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  web-portal:
+    build: .
+    container_name: centralign-web-portal
+    ports:
+      - "8000:8000"
+    environment:
+      - ERP_BASE_URL=http://127.0.0.1:8000
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-mock_key}
+    volumes:
+      - ./logs:/app/logs
+      - ./demo/invoices:/app/demo/invoices
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/docs"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+  task-worker:
+    build: .
+    container_name: centralign-task-worker
+    command: ["python", "-m", "infrastructure.worker"]
+    environment:
+      - ERP_BASE_URL=http://web-portal:8000
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-mock_key}
+    depends_on:
+      - web-portal
+    volumes:
+      - ./logs:/app/logs
+      - ./demo/invoices:/app/demo/invoices
+    restart: unless-stopped

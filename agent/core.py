@@ -24,6 +24,8 @@ from agent.observer import Observer
 from agent.planner import Planner
 from agent.verifier import Verifier
 from tools import get_default_registry
+from security.audit_ledger import audit_ledger
+from security.credential_vault import credential_vault
 
 console = Console()
 
@@ -37,9 +39,11 @@ class Agent:
         self.observer = Observer()
         self.verifier = Verifier(self.registry)
         self.state = AgentState.IDLE
+        self.current_task_id = None
 
     async def run(self, task: str) -> ExecutionLog:
         task_id = f"task_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}_{uuid.uuid4().hex[:6]}"
+        self.current_task_id = task_id
         started_at = datetime.utcnow().isoformat()
         start_perf = time.perf_counter()
 
@@ -66,6 +70,16 @@ class Agent:
 
             result = await self.executor.execute_step(step, memory)
             memory.add_step_result(result)
+            audit_ledger.record_event(
+                task_id=memory.task_id,
+                action_type="TOOL_EXECUTION",
+                payload={
+                    "step_number": step.step_number,
+                    "tool_name": step.tool_name,
+                    "success": result.success,
+                    "error_message": result.error_message,
+                },
+            )
 
             self._transition_state(AgentState.OBSERVING)
             observation = self.observer.observe(step, result, memory)
@@ -178,6 +192,12 @@ class Agent:
         prev = self.state
         self.state = new_state
         console.print(f"[dim]State Transition: {prev.value} -> [bold]{new_state.value}[/bold][/dim]")
+        if self.current_task_id:
+            audit_ledger.record_event(
+                task_id=self.current_task_id,
+                action_type="STATE_TRANSITION",
+                payload={"from_state": prev.value, "to_state": new_state.value},
+            )
 
     def _display_plan(self, plan: TaskPlan, title: str = "Action Plan"):
         table = Table(title=title, show_header=True, header_style="bold cyan")
@@ -237,10 +257,23 @@ class Agent:
                 border_style="yellow",
             )
         )
+        approved = False
         if self.interactive:
-            return Confirm.ask("Do you approve proceeding with this action?", default=True)
-        # Non-interactive default approval
-        return True
+            approved = Confirm.ask("Do you approve proceeding with this action?", default=True)
+        else:
+            # Non-interactive default approval
+            approved = True
+
+        audit_ledger.record_event(
+            task_id=memory.task_id,
+            action_type="ESCALATION_DECISION",
+            payload={
+                "question": escalation.question,
+                "reason": escalation.reason,
+                "approved": approved,
+            },
+        )
+        return approved
 
     def _finalize_log(
         self,
@@ -267,9 +300,21 @@ class Agent:
             total_duration_ms=duration_ms,
         )
 
+        audit_ledger.record_event(
+            task_id=memory.task_id,
+            action_type="VERIFICATION_RESULT",
+            payload={
+                "final_state": state.value,
+                "summary": summary,
+                "evidence_keys": list((evidence or {}).keys()),
+            },
+        )
+
         log_path = Path(settings.log_dir) / f"{memory.task_id}.json"
         log_path.parent.mkdir(parents=True, exist_ok=True)
-        log_path.write_text(log.model_dump_json(indent=2), encoding="utf-8")
+        log_json = log.model_dump_json(indent=2)
+        sanitized_json = credential_vault.redact_text(log_json)
+        log_path.write_text(sanitized_json, encoding="utf-8")
         console.print(f"\n[dim]Audit evidence log written to: [bold]{log_path}[/bold][/dim]")
 
         return log
