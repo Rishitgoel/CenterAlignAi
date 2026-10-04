@@ -1,8 +1,19 @@
 import asyncio
 import json
+import logging
 import re
 from typing import Any, Dict, List, Optional
+import warnings
+
+warnings.filterwarnings("ignore")
+logging.getLogger("google.genai").setLevel(logging.ERROR)
 from google import genai
+try:
+    from google.genai.models import AsyncModels, Models
+    AsyncModels._logged_afc_warning = True
+    Models._logged_afc_warning = True
+except Exception:
+    pass
 from config import settings
 from agent.memory import WorkingMemory
 from agent.models import PlannedStep, TaskPlan

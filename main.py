@@ -1,6 +1,12 @@
 import argparse
 import asyncio
+import logging
 import sys
+import warnings
+
+warnings.filterwarnings("ignore")
+logging.getLogger("google.genai").setLevel(logging.ERROR)
+
 from rich.console import Console
 from rich.panel import Panel
 

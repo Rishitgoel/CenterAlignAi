@@ -4,6 +4,12 @@ from pathlib import Path
 import re
 from typing import Any, Dict, Optional
 from google import genai
+try:
+    from google.genai.models import AsyncModels, Models
+    AsyncModels._logged_afc_warning = True
+    Models._logged_afc_warning = True
+except Exception:
+    pass
 from config import settings
 from tools.base import Tool, ToolResult
 
