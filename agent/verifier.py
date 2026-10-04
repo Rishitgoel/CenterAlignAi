@@ -33,45 +33,64 @@ class Verifier:
 
                 # Vendor match
                 actual_vendor = record.get("vendor_name")
-                vendor_ok = (str(actual_vendor).lower() == str(expected_vendor).lower())
-                checks.append(
-                    VerificationCheck(
-                        target="ERP Vendor Name Match",
-                        expected=expected_vendor,
-                        actual=actual_vendor,
-                        matched=vendor_ok,
+                if expected_vendor is not None:
+                    vendor_ok = (str(actual_vendor).lower() == str(expected_vendor).lower())
+                    checks.append(
+                        VerificationCheck(
+                            target="ERP Vendor Name Match",
+                            expected=expected_vendor,
+                            actual=actual_vendor,
+                            matched=vendor_ok,
+                        )
                     )
-                )
-                if not vendor_ok:
-                    discrepancies.append(f"Vendor mismatch: Expected {expected_vendor}, found {actual_vendor}")
+                    if not vendor_ok:
+                        discrepancies.append(f"Vendor mismatch: Expected {expected_vendor}, found {actual_vendor}")
 
                 # Amount match
                 actual_amount = float(record.get("amount", 0.0))
-                amount_ok = (abs(actual_amount - float(expected_amount or 0.0)) < 0.01)
-                checks.append(
-                    VerificationCheck(
-                        target="ERP Amount Match",
-                        expected=expected_amount,
-                        actual=actual_amount,
-                        matched=amount_ok,
+                if expected_amount is not None:
+                    amount_ok = (abs(actual_amount - float(expected_amount)) < 0.01)
+                    checks.append(
+                        VerificationCheck(
+                            target="ERP Amount Match",
+                            expected=expected_amount,
+                            actual=actual_amount,
+                            matched=amount_ok,
+                        )
                     )
-                )
-                if not amount_ok:
-                    discrepancies.append(f"Amount mismatch: Expected {expected_amount}, found {actual_amount}")
+                    if not amount_ok:
+                        discrepancies.append(f"Amount mismatch: Expected {expected_amount}, found {actual_amount}")
 
                 # Invoice number match
                 actual_num = record.get("invoice_number")
-                num_ok = (str(actual_num) == str(expected_inv_num))
-                checks.append(
-                    VerificationCheck(
-                        target="ERP Invoice Number Match",
-                        expected=expected_inv_num,
-                        actual=actual_num,
-                        matched=num_ok,
+                if expected_inv_num is not None:
+                    num_ok = (str(actual_num) == str(expected_inv_num))
+                    checks.append(
+                        VerificationCheck(
+                            target="ERP Invoice Number Match",
+                            expected=expected_inv_num,
+                            actual=actual_num,
+                            matched=num_ok,
+                        )
                     )
-                )
-                if not num_ok:
-                    discrepancies.append(f"Invoice number mismatch: Expected {expected_inv_num}, found {actual_num}")
+                    if not num_ok:
+                        discrepancies.append(f"Invoice number mismatch: Expected {expected_inv_num}, found {actual_num}")
+
+                # Status match if an update occurred
+                expected_status = memory.get_fact("erp_invoice_status")
+                if expected_status:
+                    actual_status = record.get("status")
+                    st_ok = (str(actual_status).lower() == str(expected_status).lower())
+                    checks.append(
+                        VerificationCheck(
+                            target="ERP Invoice Status Match",
+                            expected=expected_status,
+                            actual=actual_status,
+                            matched=st_ok,
+                        )
+                    )
+                    if not st_ok:
+                        discrepancies.append(f"Status mismatch: Expected {expected_status}, found {actual_status}")
             else:
                 checks.append(
                     VerificationCheck(
@@ -82,6 +101,25 @@ class Verifier:
                     )
                 )
                 discrepancies.append(f"Failed to query created invoice ID {created_id} from ERP")
+
+        # 1B. Verification of Invoice Deletion
+        deleted_id = memory.get_fact("deleted_invoice_id")
+        if deleted_id is not None and erp_tool:
+            del_check = await erp_tool.execute({
+                "action": "get_invoice",
+                "invoice_id": deleted_id,
+            })
+            is_deleted = not del_check.success
+            checks.append(
+                VerificationCheck(
+                    target="ERP Invoice Deletion Confirmed",
+                    expected=f"Invoice ID {deleted_id} deleted (Not in DB)",
+                    actual="Deleted (404 Not Found)" if is_deleted else "Still exists in DB",
+                    matched=is_deleted,
+                )
+            )
+            if not is_deleted:
+                discrepancies.append(f"Invoice ID {deleted_id} was expected to be deleted but still exists in ERP.")
 
         # 2. Verification of Report Generation
         report_path = memory.get_fact("report_file_path")
@@ -137,6 +175,20 @@ class Verifier:
                         matched=True,
                     )
                 )
+
+        # 5. Fallback verification: if no specific artifact targets applied, assert all execution steps succeeded
+        if len(checks) == 0:
+            all_steps_ok = all(s.success for s in memory.executed_steps) if memory.executed_steps else True
+            checks.append(
+                VerificationCheck(
+                    target="All Plan Steps Executed Successfully",
+                    expected="All steps succeeded",
+                    actual="All steps succeeded" if all_steps_ok else "One or more steps failed",
+                    matched=all_steps_ok,
+                )
+            )
+            if not all_steps_ok:
+                discrepancies.append("One or more planned steps failed during task execution.")
 
         all_passed = len(checks) > 0 and all(c.matched for c in checks) and len(discrepancies) == 0
 

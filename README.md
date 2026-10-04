@@ -6,7 +6,7 @@
 [![Playwright](https://img.shields.io/badge/Browser-Playwright%20Chromium-45ba4b.svg)](https://playwright.dev/)
 [![Gemini 3.8 Flash](https://img.shields.io/badge/Model-Gemini%203.8%20Flash-4285F4.svg)](https://ai.google.dev/)
 [![Security: SOC2 Audit Hash](https://img.shields.io/badge/Audit-SHA--256%20Chained-orange.svg)]()
-[![Tests: 27 Passed](https://img.shields.io/badge/Tests-27%20Passed-success.svg)]()
+[![Tests: 32 Passed](https://img.shields.io/badge/Tests-32%20Passed-success.svg)]()
 
 > 🌐 **Live Interactive Cloud Demo**: [**https://centeralignai.onrender.com/**](https://centeralignai.onrender.com/)  
 > 📖 **Interactive Swagger API Docs**: [**https://centeralignai.onrender.com/docs**](https://centeralignai.onrender.com/docs)  
@@ -170,7 +170,7 @@ python -m benchmarks.eval_suite
 
 ## 🧪 Automated Test Suite
 
-Run all 27 automated tests across the 3 test suites:
+Run all 32 automated tests across the 3 test suites:
 ```bash
 pytest tests/ -v
 ```
@@ -196,8 +196,8 @@ pytest tests/ -v
 - `test_sse_event_stream`: Validates real-time event streaming via SSE.
 - `test_audit_ledger_endpoint`: Validates retrieval and SHA-256 integrity verification of the compliance audit trail.
 
-### Query Parser & Intent Understanding Suite (`tests/test_query_parser.py` — 10 Tests)
-- Validates deterministic parsing, model cascade order (Gemini Flash Lite -> Flash -> Flash Lite -> Heuristics), date math, CRM deal pipeline stage updates, browser automation intent detection, and filter views.
+### Query Parser & Intent Understanding Suite (`tests/test_query_parser.py` — 15 Tests)
+- Validates deterministic parsing, model cascade order (Gemini Flash Lite -> Flash -> Flash Lite -> Heuristics), date math, CRM deal pipeline stage updates, browser automation intent detection, filter views, audit verification, invoice listing, OpenAPI path interpolation, and PATCH status updates.
 
 ---
 

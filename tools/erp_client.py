@@ -187,7 +187,11 @@ class ERPClientTool(Tool):
         if invoice_id is None:
             return ToolResult(success=False, error="Missing required parameter 'invoice_id'")
 
-        resp = await client.patch(f"/invoices/{invoice_id}/status", params={"status": status})
+        resp = await client.patch(
+            f"/invoices/{invoice_id}/status",
+            json={"status": status},
+            params={"status": status},
+        )
         if resp.status_code == 200:
             return ToolResult(
                 success=True,

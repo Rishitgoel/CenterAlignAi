@@ -209,6 +209,17 @@ class AIQueryParser:
                 confidence=1.0,
                 parser_source="deterministic",
             )
+        # Check audit verification
+        if any(kw in task_lower for kw in ["verify audit", "verify ledger", "reconcile audit", "audit integrity", "cryptographic audit", "check audit"]):
+            use_browser = any(kw in task_lower for kw in ["browser", "portal", "website", "ui"])
+            return ParsedQuery(
+                raw_query=query,
+                action="verify_audit",
+                use_browser=use_browser,
+                confidence=1.0,
+                parser_source="deterministic",
+            )
+
         if any(kw in task_lower for kw in ["switch to audit", "show audit", "open audit", "task history", "show task history", "switch to tasks", "view tasks done", "audit log", "audit ledger"]):
             return ParsedQuery(
                 raw_query=query,
@@ -293,7 +304,7 @@ class AIQueryParser:
 
         # 1. Action determination
         is_verify = any(w in task_lower for w in ["verify", "ledger", "audit", "hash", "reconcile"])
-        is_query = any(w in task_lower for w in ["find", "search", "show all", "list", "query", "filter"])
+        is_query = any(w in task_lower for w in ["find", "search", "show all", "list", "query", "filter", "get invoice", "show invoice", "display invoice"])
         use_browser = any(kw in task_lower for kw in ["browser", "portal", "website", "web portal", "ui", "web form", "playwright"])
 
         # 2. File path detection
@@ -365,14 +376,15 @@ class AIQueryParser:
         elif re.search(r"(\d{4}-\d{2}-\d{2})", query):
             due_date = re.search(r"(\d{4}-\d{2}-\d{2})", query).group(1)
 
+        is_direct_invoice_creation = action in ["create_invoice", "browser_submit"]
         return ParsedQuery(
             raw_query=query,
             action=action,
-            vendor_name=vendor_name or "Nabhas Aircon",
-            amount=amount if amount is not None else 2500.0,
+            vendor_name=vendor_name if vendor_name else ("Nabhas Aircon" if is_direct_invoice_creation else None),
+            amount=amount if amount is not None else (2500.0 if is_direct_invoice_creation else None),
             currency=currency,
             due_date=due_date or (today + timedelta(days=30)).strftime("%Y-%m-%d"),
-            invoice_number=invoice_number or f"INV-{abs(hash(query)) % 100000}",
+            invoice_number=invoice_number or (f"INV-{abs(hash(query)) % 100000}" if is_direct_invoice_creation else None),
             file_path=file_path,
             use_browser=use_browser,
             confidence=1.0,

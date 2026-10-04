@@ -1,6 +1,7 @@
 from pathlib import Path
 import time
 from typing import Any, Dict, Optional
+from agent.self_healing import SelectorSelfHealer
 from config import settings
 from tools.base import Tool, ToolResult
 
@@ -70,52 +71,53 @@ class BrowserOperatorTool(Tool):
         try:
             async with async_playwright() as p:
                 browser = await p.chromium.launch(headless=headless)
-                context = await browser.new_context(viewport={"width": 1280, "height": 800})
-                page = await context.new_page()
+                try:
+                    context = await browser.new_context(viewport={"width": 1280, "height": 800})
+                    page = await context.new_page()
 
-                # Navigate to the company portal
-                await page.goto(url, wait_until="networkidle", timeout=15000)
+                    # Navigate to the company portal
+                    await page.goto(url, wait_until="networkidle", timeout=15000)
 
-                if action == "enter_invoice_form":
-                    form_data = params.get("form_data") or {}
-                    return await self._enter_invoice_form(page, form_data, params)
+                    if action == "enter_invoice_form":
+                        form_data = params.get("form_data") or {}
+                        return await self._enter_invoice_form(page, form_data, params)
 
-                elif action == "move_opportunity_stage":
-                    company = params.get("company") or params.get("vendor_name") or "Tidewater"
-                    target_stage = params.get("target_stage") or params.get("stage") or "won"
-                    return await self._move_opportunity_stage(page, company, target_stage, params, browser)
+                    elif action == "move_opportunity_stage":
+                        company = params.get("company") or params.get("vendor_name") or "Tidewater"
+                        target_stage = params.get("target_stage") or params.get("stage") or "won"
+                        return await self._move_opportunity_stage(page, company, target_stage, params, browser)
 
-                elif action == "extract_table":
-                    return await self._extract_table(page)
+                    elif action == "extract_table":
+                        return await self._extract_table(page)
 
-                elif action == "switch_portal_view":
-                    target_view = params.get("target_view", "kanban")
-                    return await self._switch_portal_view(page, target_view, params, browser)
+                    elif action == "switch_portal_view":
+                        target_view = params.get("target_view", "kanban")
+                        return await self._switch_portal_view(page, target_view, params, browser)
 
-                elif action == "filter_opportunities":
-                    return await self._filter_opportunities(page, params, browser)
+                    elif action == "filter_opportunities":
+                        return await self._filter_opportunities(page, params, browser)
 
-                elif action == "inspect_opportunity":
-                    company = params.get("company") or params.get("vendor_name") or "Tidewater"
-                    return await self._inspect_opportunity(page, company, params, browser)
+                    elif action == "inspect_opportunity":
+                        company = params.get("company") or params.get("vendor_name") or "Tidewater"
+                        return await self._inspect_opportunity(page, company, params, browser)
 
-                elif action == "take_screenshot":
-                    shot_path = params.get("screenshot_path", "logs/portal_screenshot.png")
-                    Path(shot_path).parent.mkdir(parents=True, exist_ok=True)
-                    await page.screenshot(path=shot_path, full_page=True)
+                    elif action == "take_screenshot":
+                        shot_path = params.get("screenshot_path", "logs/portal_screenshot.png")
+                        Path(shot_path).parent.mkdir(parents=True, exist_ok=True)
+                        await page.screenshot(path=shot_path, full_page=True)
+                        return ToolResult(
+                            success=True,
+                            data={"screenshot_path": shot_path},
+                            metadata={"action": "take_screenshot"},
+                        )
+
+                    else:
+                        return ToolResult(
+                            success=False,
+                            error=f"Unsupported browser action: '{action}'",
+                        )
+                finally:
                     await browser.close()
-                    return ToolResult(
-                        success=True,
-                        data={"screenshot_path": shot_path},
-                        metadata={"action": "take_screenshot"},
-                    )
-
-                else:
-                    await browser.close()
-                    return ToolResult(
-                        success=False,
-                        error=f"Unsupported browser action: '{action}'",
-                    )
         except Exception as e:
             return ToolResult(
                 success=False,
@@ -140,13 +142,18 @@ class BrowserOperatorTool(Tool):
         await modal_btn.wait_for(state="visible", timeout=5000)
         await modal_btn.click()
 
-        # 2. Fill form fields using accessibility & ID selectors
+        # 2. Fill form fields using accessibility & ID selectors with self-healing
         await page.wait_for_selector("#invoice-modal:not(.hidden)", timeout=5000)
-        await page.fill("#vendor-name-input", str(vendor_name))
-        await page.fill("#invoice-number-input", str(invoice_number))
-        await page.fill("#amount-input", amount)
-        await page.fill("#due-date-input", due_date)
-        await page.fill("#notes-input", notes)
+
+        async def _fill_field(field_name: str, preferred_selector: str, val: str):
+            selector = await SelectorSelfHealer.heal_and_locate(page, field_name, preferred_selector) or preferred_selector
+            await page.fill(selector, val)
+
+        await _fill_field("vendor_name", "#vendor-name-input", str(vendor_name))
+        await _fill_field("invoice_number", "#invoice-number-input", str(invoice_number))
+        await _fill_field("amount", "#amount-input", amount)
+        await _fill_field("due_date", "#due-date-input", due_date)
+        await _fill_field("notes", "#notes-input", notes)
 
         # 3. Submit form
         await page.click("#submit-invoice-btn")

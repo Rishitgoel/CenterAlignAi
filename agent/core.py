@@ -236,16 +236,30 @@ class Agent:
 
         if verification.passed:
             await self._transition_state(AgentState.COMPLETED)
-            vendor = memory.get_fact("vendor_name") or "Vendor"
+            vendor = memory.get_fact("vendor_name")
             inv_num = memory.get_fact("invoice_number") or "N/A"
-            amt = float(memory.get_fact("amount", 0.0))
+            amt = memory.get_fact("amount")
             rec_id = memory.get_fact("created_invoice_id")
-            verif_proof = f"Verified in ERP under record ID #{rec_id}." if rec_id else "Verified in company portal with screenshot proof."
+            deleted_id = memory.get_fact("deleted_invoice_id")
+            ui_status = memory.get_fact("ui_status")
+            status_fact = memory.get_fact("erp_invoice_status")
 
-            summary = (
-                f"Successfully completed task. Processed invoice from '{vendor}' "
-                f"({inv_num}) for ${amt:,.2f}. {verif_proof}"
-            )
+            if deleted_id:
+                summary = f"Successfully completed task. Removed invoice #{deleted_id} from ERP system."
+            elif status_fact == "approved" and not memory.get_fact("file_path") and not rec_id:
+                summary = f"Successfully completed task. Approved invoice in ERP system."
+            elif vendor and amt is not None:
+                float_amt = float(amt)
+                verif_proof = f"Verified in ERP under record ID #{rec_id}." if rec_id else "Verified in company portal with screenshot proof."
+                summary = (
+                    f"Successfully completed task. Processed invoice from '{vendor}' "
+                    f"({inv_num}) for ${float_amt:,.2f}. {verif_proof}"
+                )
+            elif ui_status:
+                summary = f"Successfully completed task. {ui_status}."
+            else:
+                summary = f"Successfully completed task: {plan.goal}."
+
             console.print(Panel(f"[bold green]SUCCESS:[/bold green] {summary}", title="Task Complete", border_style="green"))
             return await self._finalize_log(
                 memory=memory,

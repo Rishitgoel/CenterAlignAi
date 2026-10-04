@@ -69,6 +69,8 @@ class Observer:
                 facts["created_invoice_id"] = data["id"]
             if "status" in data:
                 facts["erp_invoice_status"] = data["status"]
+            if "invoice_id" in data and data.get("status") == "deleted":
+                facts["deleted_invoice_id"] = data["invoice_id"]
             for field in ["vendor_name", "invoice_number", "amount", "due_date"]:
                 if field in data and data[field]:
                     facts[field] = data[field]

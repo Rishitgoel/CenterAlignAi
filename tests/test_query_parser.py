@@ -134,3 +134,96 @@ def test_planner_software_operator_plans():
     assert plan_delete.steps[0].tool_name == "erp_client"
     assert plan_delete.steps[0].tool_input["action"] == "delete_invoice"
     assert plan_delete.steps[0].tool_input["invoice_id"] == 88
+
+
+def test_planner_query_invoices_plan_generation():
+    from agent.planner import Planner
+    planner = Planner(api_key=None)
+
+    # List all invoices (no vendor filter)
+    plan_list = planner._create_heuristic_plan("list all invoices from ERP")
+    assert plan_list.steps[0].tool_name == "erp_client"
+    assert plan_list.steps[0].tool_input["action"] == "list_invoices"
+
+    # Search by vendor
+    plan_search = planner._create_heuristic_plan("find invoices for Globex Corporation")
+    assert plan_search.steps[0].tool_name == "erp_client"
+    assert plan_search.steps[0].tool_input["action"] == "search_invoices"
+    assert plan_search.steps[0].tool_input["vendor_name"] == "Globex Corporation"
+
+
+def test_planner_verify_audit_plan_generation():
+    from agent.planner import Planner
+    planner = Planner(api_key=None)
+
+    # Standard audit ledger verification
+    plan_audit = planner._create_heuristic_plan("verify audit ledger")
+    assert len(plan_audit.steps) >= 1
+    assert plan_audit.steps[0].tool_name == "file_writer"
+
+    # Browser audit verification
+    plan_audit_browser = planner._create_heuristic_plan("open web portal and verify audit ledger")
+    assert plan_audit_browser.steps[0].tool_name == "browser_operator"
+    assert plan_audit_browser.steps[0].tool_input["action"] == "switch_portal_view"
+    assert plan_audit_browser.steps[0].tool_input["target_view"] == "audit"
+
+
+def test_planner_download_sample_plan_generation():
+    from agent.planner import Planner
+    planner = Planner(api_key=None)
+
+    plan_sample = planner._create_heuristic_plan("download sample invoice pdf")
+    assert len(plan_sample.steps) == 1
+    assert plan_sample.steps[0].tool_name == "file_writer"
+
+
+@pytest.mark.anyio
+async def test_update_invoice_status_via_query_param():
+    import uuid
+    from httpx import ASGITransport, AsyncClient
+    from mock_erp.app import app
+
+    inv_code = f"INV-QUERY-{uuid.uuid4().hex[:6]}"
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+        # Create an invoice
+        create_resp = await ac.post(
+            "/invoices",
+            json={
+                "vendor_name": "Test Query Param Vendor",
+                "invoice_number": inv_code,
+                "amount": 1000.0,
+                "due_date": "2026-10-30",
+            },
+        )
+        assert create_resp.status_code == 201
+        inv_id = create_resp.json()["id"]
+
+        # Update status using query param without JSON body (the case that previously caused HTTP 422)
+        patch_resp = await ac.patch(f"/invoices/{inv_id}/status?status=approved")
+        assert patch_resp.status_code == 200
+        assert patch_resp.json()["status"] == "approved"
+
+        # Update status using JSON body
+        patch_body_resp = await ac.patch(
+            f"/invoices/{inv_id}/status",
+            json={"status": "settled"},
+        )
+        assert patch_body_resp.status_code == 200
+        assert patch_body_resp.json()["status"] == "settled"
+
+
+@pytest.mark.anyio
+async def test_openapi_loader_path_interpolation_and_patch():
+    from tools.openapi_loader import OpenAPILoader
+    from mock_erp.app import app
+
+    spec = app.openapi()
+    tools = OpenAPILoader.load_from_spec(spec, base_url="http://127.0.0.1:8000")
+
+    # Verify PATCH endpoint was loaded
+    patch_tools = [t for t in tools if t.method == "PATCH"]
+    assert len(patch_tools) > 0
+
+    # Verify path param interpolation tool exists
+    get_inv_tool = next((t for t in tools if "{invoice_id}" in t.path), None)
+    assert get_inv_tool is not None

@@ -26,16 +26,26 @@ class OpenAPITool(Tool):
 
     async def execute(self, params: Dict[str, Any]) -> ToolResult:
         url = f"{self.base_url}{self.path}"
+        req_params = dict(params or {})
+
+        # Interpolate path parameters (e.g. /invoices/{invoice_id})
+        for k in list(req_params.keys()):
+            placeholder = f"{{{k}}}"
+            if placeholder in url:
+                url = url.replace(placeholder, str(req_params.pop(k)))
+
         try:
             async with httpx.AsyncClient(timeout=10.0) as client:
                 if self.method == "GET":
-                    resp = await client.get(url, params=params)
+                    resp = await client.get(url, params=req_params)
                 elif self.method == "POST":
-                    resp = await client.post(url, json=params)
+                    resp = await client.post(url, json=req_params)
                 elif self.method == "PUT":
-                    resp = await client.put(url, json=params)
+                    resp = await client.put(url, json=req_params)
+                elif self.method == "PATCH":
+                    resp = await client.patch(url, json=req_params)
                 elif self.method == "DELETE":
-                    resp = await client.delete(url, params=params)
+                    resp = await client.delete(url, params=req_params)
                 else:
                     return ToolResult(success=False, error=f"Unsupported HTTP method: {self.method}")
 
@@ -62,7 +72,7 @@ class OpenAPILoader:
 
         for path, path_item in paths.items():
             for method, operation in path_item.items():
-                if method.lower() not in ["get", "post", "put", "delete"]:
+                if method.lower() not in ["get", "post", "put", "patch", "delete"]:
                     continue
 
                 operation_id = operation.get("operationId") or f"{method.lower()}_{path.strip('/').replace('/', '_')}"

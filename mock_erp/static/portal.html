@@ -2454,16 +2454,23 @@
       if (approveMatch && (lower.includes('invoice') || q.includes('#') || lower.includes('approve'))) {
         const invId = approveMatch[1];
         try {
-          const res = await fetch(`/invoices/${invId}/status?status=approved`, { method: 'PATCH' });
+          const res = await fetch(`/invoices/${invId}/status?status=approved`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ status: 'approved' })
+          });
           if (res.ok) {
             await fetchInvoices();
             showToast(`✦ AI Controller: Invoice #${invId} approved in company ERP`, true);
             const inputEl = document.getElementById('ai-command-input');
             if (inputEl) inputEl.value = '';
             return;
+          } else {
+            showToast(`Error: Could not approve invoice #${invId} (${res.status})`, false);
           }
         } catch (e) {
           console.error(e);
+          showToast(`Error connecting to ERP to approve invoice #${invId}`, false);
         }
       }
       const deleteMatch = q.match(/(?:delete|remove)\s+(?:invoice\s+)?#?([0-9]+)/i);
@@ -2477,9 +2484,12 @@
             const inputEl = document.getElementById('ai-command-input');
             if (inputEl) inputEl.value = '';
             return;
+          } else {
+            showToast(`Error: Invoice #${invId} not found in ERP (${res.status})`, false);
           }
         } catch (e) {
           console.error(e);
+          showToast(`Error connecting to ERP to delete invoice #${invId}`, false);
         }
       }
       if (/refresh\s+(?:data|invoices?|ledger|system)/i.test(q)) {

@@ -168,12 +168,27 @@ async def create_invoice_endpoint(invoice_req: InvoiceCreateRequest):
 
 
 class InvoiceStatusUpdateRequest(BaseModel):
-    status: str
+    status: Optional[str] = None
 
 
 @app.patch("/invoices/{invoice_id}/status", response_model=InvoiceRecord)
-async def update_invoice_status_endpoint(invoice_id: int, req: InvoiceStatusUpdateRequest):
-    updated = await update_invoice_status(invoice_id, req.status)
+async def update_invoice_status_endpoint(
+    invoice_id: int,
+    req: Optional[InvoiceStatusUpdateRequest] = None,
+    status_query: Optional[str] = Query(None, alias="status"),
+):
+    target_status = None
+    if req and req.status:
+        target_status = req.status
+    elif status_query:
+        target_status = status_query
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Status field is required in request body or query parameter.",
+        )
+
+    updated = await update_invoice_status(invoice_id, target_status)
     if not updated:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
