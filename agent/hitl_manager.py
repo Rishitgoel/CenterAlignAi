@@ -1,5 +1,5 @@
 import asyncio
-from datetime import datetime
+from datetime import datetime, timezone
 import json
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional
@@ -15,7 +15,7 @@ class SuspendedTask(BaseModel):
     discovered_facts: Dict[str, Any]
     current_step_idx: int
     plan_json: str
-    suspended_at: str = Field(default_factory=lambda: datetime.utcnow().isoformat())
+    suspended_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
     status: str = "PENDING_APPROVAL"  # PENDING_APPROVAL, APPROVED, REJECTED
     operator_notes: Optional[str] = None
 

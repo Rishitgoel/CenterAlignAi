@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 import hashlib
 import json
 from pathlib import Path
@@ -8,7 +8,7 @@ from pydantic import BaseModel, Field
 
 class AuditBlock(BaseModel):
     index: int
-    timestamp: str = Field(default_factory=lambda: datetime.utcnow().isoformat())
+    timestamp: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
     task_id: str
     action_type: str  # STATE_TRANSITION, TOOL_EXECUTION, ESCALATION_DECISION, VERIFICATION_RESULT
     payload: Dict[str, Any]
@@ -45,7 +45,7 @@ class CryptographicAuditLedger:
         return hashlib.sha256(raw.encode("utf-8")).hexdigest()
 
     def record_event(self, task_id: str, action_type: str, payload: Dict[str, Any]) -> AuditBlock:
-        timestamp = datetime.utcnow().isoformat()
+        timestamp = datetime.now(timezone.utc).isoformat()
         current_index = self._count_records() + 1
         payload_str = json.dumps(payload, sort_keys=True)
         prev_hash = self._last_hash

@@ -1,5 +1,5 @@
 import asyncio
-from datetime import datetime
+from datetime import datetime, timezone
 import json
 from pathlib import Path
 from typing import Dict, List, Optional
@@ -14,8 +14,8 @@ class TaskJob(BaseModel):
     job_id: str
     task: str
     status: str = "PENDING"  # PENDING, RUNNING, COMPLETED, FAILED
-    created_at: str = Field(default_factory=lambda: datetime.utcnow().isoformat())
-    updated_at: str = Field(default_factory=lambda: datetime.utcnow().isoformat())
+    created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
+    updated_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
     summary: Optional[str] = None
     error: Optional[str] = None
     task_id: Optional[str] = None
@@ -46,7 +46,7 @@ class WorkerService:
         return job_id
 
     def _save_job(self, job: TaskJob):
-        job.updated_at = datetime.utcnow().isoformat()
+        job.updated_at = datetime.now(timezone.utc).isoformat()
         job_file = self.job_store_dir / f"{job.job_id}.json"
         job_file.write_text(job.model_dump_json(indent=2), encoding="utf-8")
 

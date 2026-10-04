@@ -15,7 +15,9 @@ from mock_erp.database import (
     get_vendors,
     init_db,
     search_invoices,
+    update_invoice_status,
 )
+from pydantic import BaseModel
 from mock_erp.models import InvoiceCreateRequest, InvoiceRecord, VendorRecord
 
 
@@ -144,6 +146,21 @@ async def create_invoice_endpoint(invoice_req: InvoiceCreateRequest):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to record invoice: {str(e)}",
         )
+
+
+class InvoiceStatusUpdateRequest(BaseModel):
+    status: str
+
+
+@app.patch("/invoices/{invoice_id}/status", response_model=InvoiceRecord)
+async def update_invoice_status_endpoint(invoice_id: int, req: InvoiceStatusUpdateRequest):
+    updated = await update_invoice_status(invoice_id, req.status)
+    if not updated:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=f"Invoice with ID {invoice_id} not found",
+        )
+    return updated
 
 
 @app.delete("/invoices/{invoice_id}")

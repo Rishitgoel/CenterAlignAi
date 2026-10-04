@@ -76,9 +76,9 @@ def _row_to_invoice(row: aiosqlite.Row) -> InvoiceRecord:
 
 
 async def create_invoice(req: InvoiceCreateRequest) -> InvoiceRecord:
-    from datetime import datetime
+    from datetime import datetime, timezone
 
-    created_at = datetime.utcnow().isoformat()
+    created_at = datetime.now(timezone.utc).isoformat()
     line_items_json = json.dumps([item.model_dump() for item in (req.line_items or [])])
 
     async with get_connection() as conn:
@@ -158,6 +158,18 @@ async def search_invoices(
         async with conn.execute(query, params) as cur:
             rows = await cur.fetchall()
             return [_row_to_invoice(r) for r in rows]
+
+
+async def update_invoice_status(invoice_id: int, status: str) -> Optional[InvoiceRecord]:
+    async with get_connection() as conn:
+        conn.row_factory = aiosqlite.Row
+        await conn.execute("UPDATE invoices SET status = ? WHERE id = ?", (status, invoice_id))
+        await conn.commit()
+        async with conn.execute("SELECT * FROM invoices WHERE id = ?", (invoice_id,)) as cur:
+            row = await cur.fetchone()
+            if row:
+                return _row_to_invoice(row)
+            return None
 
 
 async def delete_invoice(invoice_id: int) -> bool:

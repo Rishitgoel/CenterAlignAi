@@ -125,6 +125,19 @@
       flex-direction: column;
     }
 
+    .kanban-cards-container {
+      min-height: 140px;
+      padding: 4px 2px;
+      border-radius: 8px;
+      transition: background-color 0.2s ease, outline-color 0.2s ease;
+    }
+    .kanban-cards-container.drag-over, .kanban-col.drag-over {
+      background-color: rgba(0, 0, 0, 0.035);
+      border-radius: 8px;
+      outline: 2px dashed #949086;
+      outline-offset: -2px;
+    }
+
     /* Kanban Card Anatomy */
     .opportunity-card {
       background: var(--bg-card);
@@ -133,14 +146,22 @@
       padding: 12px 14px;
       margin-bottom: 10px;
       box-shadow: var(--shadow-card);
-      transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
-      cursor: pointer;
+      transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease, opacity 0.15s ease;
+      cursor: grab;
       user-select: none;
     }
     .opportunity-card:hover {
       border-color: var(--border-card-hover);
       box-shadow: var(--shadow-card-hover);
       transform: translateY(-1px);
+    }
+    .opportunity-card:active {
+      cursor: grabbing;
+    }
+    .opportunity-card.dragging {
+      opacity: 0.35;
+      transform: scale(0.97);
+      box-shadow: 0 12px 24px -6px rgba(0,0,0,0.12);
     }
 
     .card-title {
@@ -392,7 +413,7 @@
           <div class="grid grid-cols-1 md:grid-cols-5 gap-4 items-stretch">
             
             <!-- STAGE 1: Qualification -->
-            <div class="kanban-col" data-stage="qualification">
+            <div class="kanban-col" data-stage="qualification" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event, 'qualification')">
               <div class="flex items-center justify-between pb-3 mb-3 border-b border-gray-100">
                 <div class="flex items-center space-x-2">
                   <span class="stage-ring stage-ring-qual"></span>
@@ -401,7 +422,7 @@
                 </div>
                 <button onclick="openModalWithStage('qualification')" class="text-gray-400 hover:text-gray-700 text-sm font-semibold">+</button>
               </div>
-              <div class="kanban-cards-container" id="cards-qual"></div>
+              <div class="kanban-cards-container" id="cards-qual" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event, 'qualification')"></div>
               <button onclick="openModalWithStage('qualification')" class="mt-2 mb-3 w-full py-2 border border-dashed border-gray-200 rounded-lg text-xs font-medium text-gray-400 hover:text-gray-700 hover:border-gray-300 transition-colors">
                 + Create opportunity
               </button>
@@ -412,7 +433,7 @@
             </div>
 
             <!-- STAGE 2: Discovery -->
-            <div class="kanban-col" data-stage="discovery">
+            <div class="kanban-col" data-stage="discovery" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event, 'discovery')">
               <div class="flex items-center justify-between pb-3 mb-3 border-b border-gray-100">
                 <div class="flex items-center space-x-2">
                   <span class="stage-ring stage-ring-disc"></span>
@@ -421,7 +442,7 @@
                 </div>
                 <button onclick="openModalWithStage('discovery')" class="text-gray-400 hover:text-gray-700 text-sm font-semibold">+</button>
               </div>
-              <div class="kanban-cards-container" id="cards-disc"></div>
+              <div class="kanban-cards-container" id="cards-disc" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event, 'discovery')"></div>
               <button onclick="openModalWithStage('discovery')" class="mt-2 mb-3 w-full py-2 border border-dashed border-gray-200 rounded-lg text-xs font-medium text-gray-400 hover:text-gray-700 hover:border-gray-300 transition-colors">
                 + Create opportunity
               </button>
@@ -432,7 +453,7 @@
             </div>
 
             <!-- STAGE 3: Proposal -->
-            <div class="kanban-col" data-stage="proposal">
+            <div class="kanban-col" data-stage="proposal" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event, 'proposal')">
               <div class="flex items-center justify-between pb-3 mb-3 border-b border-gray-100">
                 <div class="flex items-center space-x-2">
                   <span class="stage-ring stage-ring-prop"></span>
@@ -441,7 +462,7 @@
                 </div>
                 <button onclick="openModalWithStage('proposal')" class="text-gray-400 hover:text-gray-700 text-sm font-semibold">+</button>
               </div>
-              <div class="kanban-cards-container" id="cards-prop"></div>
+              <div class="kanban-cards-container" id="cards-prop" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event, 'proposal')"></div>
               <button onclick="openModalWithStage('proposal')" class="mt-2 mb-3 w-full py-2 border border-dashed border-gray-200 rounded-lg text-xs font-medium text-gray-400 hover:text-gray-700 hover:border-gray-300 transition-colors">
                 + Create opportunity
               </button>
@@ -452,7 +473,7 @@
             </div>
 
             <!-- STAGE 4: Negotiation -->
-            <div class="kanban-col" data-stage="negotiation">
+            <div class="kanban-col" data-stage="negotiation" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event, 'negotiation')">
               <div class="flex items-center justify-between pb-3 mb-3 border-b border-gray-100">
                 <div class="flex items-center space-x-2">
                   <span class="stage-ring stage-ring-nego"></span>
@@ -461,7 +482,7 @@
                 </div>
                 <button onclick="openModalWithStage('negotiation')" class="text-gray-400 hover:text-gray-700 text-sm font-semibold">+</button>
               </div>
-              <div class="kanban-cards-container" id="cards-nego"></div>
+              <div class="kanban-cards-container" id="cards-nego" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event, 'negotiation')"></div>
               <button onclick="openModalWithStage('negotiation')" class="mt-2 mb-3 w-full py-2 border border-dashed border-gray-200 rounded-lg text-xs font-medium text-gray-400 hover:text-gray-700 hover:border-gray-300 transition-colors">
                 + Create opportunity
               </button>
@@ -472,7 +493,7 @@
             </div>
 
             <!-- STAGE 5: Won -->
-            <div class="kanban-col" data-stage="won">
+            <div class="kanban-col" data-stage="won" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event, 'won')">
               <div class="flex items-center justify-between pb-3 mb-3 border-b border-gray-100">
                 <div class="flex items-center space-x-2">
                   <span class="stage-ring stage-ring-won">✓</span>
@@ -481,7 +502,7 @@
                 </div>
                 <button onclick="openModalWithStage('won')" class="text-gray-400 hover:text-gray-700 text-sm font-semibold">+</button>
               </div>
-              <div class="kanban-cards-container" id="cards-won"></div>
+              <div class="kanban-cards-container" id="cards-won" ondragover="handleDragOver(event)" ondragleave="handleDragLeave(event)" ondrop="handleDrop(event, 'won')"></div>
               <button onclick="openModalWithStage('won')" class="mt-2 mb-3 w-full py-2 border border-dashed border-gray-200 rounded-lg text-xs font-medium text-gray-400 hover:text-gray-700 hover:border-gray-300 transition-colors">
                 + Create opportunity
               </button>
@@ -780,6 +801,12 @@
     let liveInvoices = [];
     let currentFilterMinAmount = 0;
     let currentActiveStageForModal = 'qualification';
+    let cardStageMap = {};
+    try {
+      cardStageMap = JSON.parse(localStorage.getItem('crm_card_stages') || '{}');
+    } catch (e) {
+      cardStageMap = {};
+    }
 
     // Sidebar state & localStorage persistence
     function updateSidebarCollapseIcon(isCollapsed) {
@@ -871,22 +898,29 @@
         won: { container: 'cards-won', countEl: 'count-won', sumEl: 'sum-won', items: [], total: 0 }
       };
 
-      const allMergedCards = [...dynamicCards];
+      const allMergedCards = [];
+      dynamicCards.forEach(c => {
+        allMergedCards.push({
+          ...c,
+          stage: cardStageMap[c.id] || c.stage
+        });
+      });
+
       liveInvoices.forEach(inv => {
-        const existing = allMergedCards.find(c => c.id === `erp-${inv.id}`);
-        if (!existing) {
-          allMergedCards.push({
-            id: `erp-${inv.id}`,
-            title: `${inv.vendor_name} — Invoice #${inv.invoice_number}`,
-            company: inv.vendor_name,
-            amount: parseFloat(inv.amount || 0),
-            due_date: inv.due_date || '—',
-            owner: 'CentrAlign Agent',
-            owner_initials: 'CA',
-            stage: inv.status === 'approved' || inv.status === 'settled' ? 'won' : 'qualification',
-            isLiveErp: true
-          });
-        }
+        const cardId = `erp-${inv.id}`;
+        const defaultStage = (inv.status === 'approved' || inv.status === 'settled') ? 'won' : 'qualification';
+        const currentStage = cardStageMap[cardId] || defaultStage;
+        allMergedCards.push({
+          id: cardId,
+          title: `${inv.vendor_name} — Invoice #${inv.invoice_number}`,
+          company: inv.vendor_name,
+          amount: parseFloat(inv.amount || 0),
+          due_date: inv.due_date || '—',
+          owner: 'CentrAlign Agent',
+          owner_initials: 'CA',
+          stage: currentStage,
+          isLiveErp: true
+        });
       });
 
       // Filter
@@ -918,7 +952,11 @@
 
         if (container) {
           container.innerHTML = config.items.map(card => `
-            <div class="opportunity-card" id="deal-card-${card.id}" onclick="inspectCard('${card.id}')">
+            <div class="opportunity-card" id="deal-card-${card.id}" 
+                 draggable="true" 
+                 ondragstart="handleDragStart(event, '${card.id}')"
+                 ondragend="handleDragEnd(event)"
+                 onclick="inspectCard('${card.id}')">
               <h4 class="card-title">${escapeHtml(card.title)}</h4>
               <div class="card-row">
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
@@ -1056,6 +1094,11 @@
 
         if (res.status === 201) {
           const data = await res.json();
+          const targetStage = currentActiveStageForModal || 'qualification';
+          cardStageMap[`erp-${data.id}`] = targetStage;
+          try {
+            localStorage.setItem('crm_card_stages', JSON.stringify(cardStageMap));
+          } catch (e) {}
           showToast(`Invoice #${data.invoice_number} successfully registered into company ERP (Record ID ${data.id})!`, true);
           closeModal();
           await fetchInvoices();
@@ -1089,14 +1132,74 @@
     }
 
     let currentInspectedCard = null;
+    let draggedCardId = null;
+    let isDraggingCard = false;
 
-    function inspectCard(cardId) {
-      let found = SEEDED_OPPORTUNITIES.find(c => c.id === cardId);
-      if (!found && cardId.startsWith('erp-')) {
+    function handleDragStart(e, cardId) {
+      draggedCardId = cardId;
+      isDraggingCard = true;
+      e.dataTransfer.setData('text/plain', cardId);
+      e.dataTransfer.effectAllowed = 'move';
+      const el = document.getElementById(`deal-card-${cardId}`);
+      if (el) {
+        setTimeout(() => el.classList.add('dragging'), 0);
+      }
+    }
+
+    function handleDragEnd(e) {
+      if (draggedCardId) {
+        const el = document.getElementById(`deal-card-${draggedCardId}`);
+        if (el) el.classList.remove('dragging');
+      }
+      document.querySelectorAll('.kanban-col, .kanban-cards-container').forEach(c => {
+        c.classList.remove('drag-over');
+      });
+      setTimeout(() => {
+        isDraggingCard = false;
+        draggedCardId = null;
+      }, 50);
+    }
+
+    function handleDragOver(e) {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      const col = e.currentTarget;
+      if (col && !col.classList.contains('drag-over')) {
+        col.classList.add('drag-over');
+      }
+    }
+
+    function handleDragLeave(e) {
+      const col = e.currentTarget;
+      if (col) {
+        col.classList.remove('drag-over');
+      }
+    }
+
+    function handleDrop(e, targetStage) {
+      e.preventDefault();
+      e.stopPropagation();
+      document.querySelectorAll('.kanban-col, .kanban-cards-container').forEach(c => {
+        c.classList.remove('drag-over');
+      });
+      const cardId = e.dataTransfer.getData('text/plain') || draggedCardId;
+      if (cardId && targetStage) {
+        moveCardToStage(cardId, targetStage);
+      }
+      setTimeout(() => {
+        isDraggingCard = false;
+        draggedCardId = null;
+      }, 50);
+    }
+
+    function findCardById(cardId) {
+      if (!cardId) return null;
+      if (cardId.startsWith('erp-')) {
         const erpId = parseInt(cardId.replace('erp-', ''), 10);
         const inv = liveInvoices.find(i => i.id === erpId);
         if (inv) {
-          found = {
+          const defaultStage = (inv.status === 'approved' || inv.status === 'settled') ? 'won' : 'qualification';
+          return {
             id: cardId,
             title: `${inv.vendor_name} — Invoice #${inv.invoice_number}`,
             company: inv.vendor_name,
@@ -1104,14 +1207,24 @@
             due_date: inv.due_date || '—',
             owner: 'CentrAlign Agent',
             owner_initials: 'CA',
-            stage: inv.status === 'approved' || inv.status === 'settled' ? 'won' : 'qualification',
+            stage: cardStageMap[cardId] || defaultStage,
             isLiveErp: true
           };
         }
-      } else if (!found) {
-        found = dynamicCards.find(c => c.id === cardId);
       }
+      const dyn = dynamicCards.find(c => c.id === cardId);
+      if (dyn) {
+        return {
+          ...dyn,
+          stage: cardStageMap[dyn.id] || dyn.stage
+        };
+      }
+      return null;
+    }
 
+    function inspectCard(cardId) {
+      if (isDraggingCard) return;
+      const found = findCardById(cardId);
       if (!found) return;
       currentInspectedCard = found;
 
@@ -1133,18 +1246,52 @@
       currentInspectedCard = null;
     }
 
-    function moveCurrentCard(newStage) {
-      if (!currentInspectedCard) return;
-      currentInspectedCard.stage = newStage;
+    async function moveCardToStage(cardId, newStage) {
+      if (!cardId || !newStage) return;
+      cardStageMap[cardId] = newStage;
+      try {
+        localStorage.setItem('crm_card_stages', JSON.stringify(cardStageMap));
+      } catch (e) {}
 
-      const seedIdx = dynamicCards.findIndex(c => c.id === currentInspectedCard.id);
+      const seedIdx = dynamicCards.findIndex(c => c.id === cardId);
       if (seedIdx !== -1) {
         dynamicCards[seedIdx].stage = newStage;
       }
 
+      if (cardId.startsWith('erp-')) {
+        const erpId = parseInt(cardId.replace('erp-', ''), 10);
+        const inv = liveInvoices.find(i => i.id === erpId);
+        if (inv) {
+          const targetStatus = (newStage === 'won') ? 'approved' : 'pending';
+          if (inv.status !== targetStatus) {
+            inv.status = targetStatus;
+            try {
+              fetch(`/invoices/${erpId}/status`, {
+                method: 'PATCH',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({status: targetStatus})
+              }).catch(() => {});
+            } catch (e) {}
+          }
+        }
+      }
+
+      if (currentInspectedCard && currentInspectedCard.id === cardId) {
+        currentInspectedCard.stage = newStage;
+      }
+
       renderKanbanBoard();
+      
+      const card = findCardById(cardId);
+      const name = card ? card.company : 'Invoice';
+      const stageName = newStage.charAt(0).toUpperCase() + newStage.slice(1);
+      showToast(`Moved "${name}" to ${stageName}`, true);
+    }
+
+    function moveCurrentCard(newStage) {
+      if (!currentInspectedCard) return;
+      moveCardToStage(currentInspectedCard.id, newStage);
       closeCardInspection();
-      showToast(`Moved "${currentInspectedCard.company}" to ${newStage.charAt(0).toUpperCase() + newStage.slice(1)}`, true);
     }
 
     function escapeHtml(str) {

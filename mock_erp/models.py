@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import List, Optional
 from pydantic import BaseModel, Field
 
@@ -27,7 +27,7 @@ class InvoiceRecord(BaseModel):
     status: str = "pending"
     line_items: List[LineItem] = Field(default_factory=list)
     notes: Optional[str] = None
-    created_at: str = Field(default_factory=lambda: datetime.utcnow().isoformat())
+    created_at: str = Field(default_factory=lambda: datetime.now(timezone.utc).isoformat())
 
 
 class InvoiceCreateRequest(BaseModel):

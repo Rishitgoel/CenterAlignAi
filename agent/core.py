@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timezone
 import json
 from pathlib import Path
 import time
@@ -42,9 +42,9 @@ class Agent:
         self.current_task_id = None
 
     async def run(self, task: str) -> ExecutionLog:
-        task_id = f"task_{datetime.utcnow().strftime('%Y%m%d_%H%M%S')}_{uuid.uuid4().hex[:6]}"
+        task_id = f"task_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}_{uuid.uuid4().hex[:6]}"
         self.current_task_id = task_id
-        started_at = datetime.utcnow().isoformat()
+        started_at = datetime.now(timezone.utc).isoformat()
         start_perf = time.perf_counter()
 
         memory = WorkingMemory(task_id=task_id, original_request=task)
@@ -290,7 +290,7 @@ class Agent:
         evidence: dict = None,
     ) -> ExecutionLog:
         duration_ms = round((time.perf_counter() - start_perf) * 1000.0, 2)
-        completed_at = datetime.utcnow().isoformat()
+        completed_at = datetime.now(timezone.utc).isoformat()
 
         log = ExecutionLog(
             task_id=memory.task_id,
