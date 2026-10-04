@@ -18,6 +18,7 @@ except Exception:
 from config import settings
 from agent.memory import WorkingMemory
 from agent.models import PlannedStep, TaskPlan
+from agent.query_parser import AIQueryParser, ParsedQuery
 
 
 PLANNER_SYSTEM_PROMPT = """You are an expert autonomous task decomposition planner for an enterprise task worker.
@@ -55,6 +56,13 @@ class Planner:
     def __init__(self, api_key: Optional[str] = None):
         self.api_key = api_key or settings.gemini_api_key
         self._client: Optional[genai.Client] = None
+        # Multi-model cascade: primary high-reasoning model with low-cost & high-throughput backups
+        self.model_cascade = [
+            "gemini-2.5-flash",
+            "gemini-2.5-flash-lite",
+            "gemini-3.5-flash-lite",
+        ]
+        self.query_parser = AIQueryParser(api_key=self.api_key)
 
     def _get_client(self) -> Optional[genai.Client]:
         if not self._client and self.api_key:
@@ -69,29 +77,32 @@ class Planner:
     ) -> TaskPlan:
         client = self._get_client()
 
-        # If LLM client is available, plan using Gemini Flash with strict timeout
+        # If LLM client is available, attempt cascade: gemini-2.5-flash -> gemini-2.5-flash-lite -> gemini-3.5-flash-lite
         if client:
-            try:
-                user_prompt = (
-                    f"AVAILABLE TOOLS:\n{tools_description}\n\n"
-                    f"CURRENT CONTEXT & MEMORY:\n{memory.get_context_summary()}\n\n"
-                    f"USER TASK:\n{task}\n\n"
-                    "Generate the optimal TaskPlan JSON:"
-                )
-                response = await asyncio.wait_for(
-                    client.aio.models.generate_content(
-                        model="gemini-3.5-flash-lite",
-                        contents=f"{PLANNER_SYSTEM_PROMPT}\n\n{user_prompt}",
-                    ),
-                    timeout=5.0,
-                )
-                raw_text = response.text or ""
-                return self._parse_plan_json(raw_text, fallback_task=task)
-            except Exception:
-                # Fallback to deterministic heuristic plan if API is unavailable, rate-limited, or times out
-                pass
+            user_prompt = (
+                f"AVAILABLE TOOLS:\n{tools_description}\n\n"
+                f"CURRENT CONTEXT & MEMORY:\n{memory.get_context_summary()}\n\n"
+                f"USER TASK:\n{task}\n\n"
+                "Generate the optimal TaskPlan JSON:"
+            )
+            for model_name in self.model_cascade:
+                try:
+                    response = await asyncio.wait_for(
+                        client.aio.models.generate_content(
+                            model=model_name,
+                            contents=f"{PLANNER_SYSTEM_PROMPT}\n\n{user_prompt}",
+                        ),
+                        timeout=4.0,
+                    )
+                    raw_text = response.text or ""
+                    plan = self._parse_plan_json(raw_text, fallback_task=task)
+                    if plan:
+                        return plan
+                except Exception:
+                    # Cascade to backup model if quota exceeded (429) or timeout
+                    continue
 
-        # Deterministic heuristic plan generator (guarantees zero-dependency operation)
+        # Fallback to AI Query Parser & deterministic heuristic plan
         return self._create_heuristic_plan(task)
 
     async def replan(
@@ -105,31 +116,34 @@ class Planner:
         client = self._get_client()
 
         if client:
-            try:
-                prompt = (
-                    f"AVAILABLE TOOLS:\n{tools_description}\n\n"
-                    f"PREVIOUS PLAN:\n{original_plan.model_dump_json(indent=2)}\n\n"
-                    f"FAILED STEP: Step {failed_step.step_number} ({failed_step.tool_name})\n"
-                    f"ERROR ENCOUNTERED:\n{error_message}\n\n"
-                    f"MEMORY CONTEXT:\n{memory.get_context_summary()}\n\n"
-                    "Formulate a corrected, recovered TaskPlan JSON that overcomes this failure:"
-                )
-                response = await asyncio.wait_for(
-                    client.aio.models.generate_content(
-                        model="gemini-3.5-flash-lite",
-                        contents=f"{REPLANNER_SYSTEM_PROMPT}\n\n{prompt}",
-                    ),
-                    timeout=5.0,
-                )
-                raw_text = response.text or ""
-                return self._parse_plan_json(raw_text, fallback_task=original_plan.goal)
-            except Exception:
-                pass
+            prompt = (
+                f"AVAILABLE TOOLS:\n{tools_description}\n\n"
+                f"PREVIOUS PLAN:\n{original_plan.model_dump_json(indent=2)}\n\n"
+                f"FAILED STEP: Step {failed_step.step_number} ({failed_step.tool_name})\n"
+                f"ERROR ENCOUNTERED:\n{error_message}\n\n"
+                f"MEMORY CONTEXT:\n{memory.get_context_summary()}\n\n"
+                "Formulate a corrected, recovered TaskPlan JSON that overcomes this failure:"
+            )
+            for model_name in self.model_cascade:
+                try:
+                    response = await asyncio.wait_for(
+                        client.aio.models.generate_content(
+                            model=model_name,
+                            contents=f"{REPLANNER_SYSTEM_PROMPT}\n\n{prompt}",
+                        ),
+                        timeout=4.0,
+                    )
+                    raw_text = response.text or ""
+                    plan = self._parse_plan_json(raw_text, fallback_task=original_plan.goal)
+                    if plan:
+                        return plan
+                except Exception:
+                    continue
 
         # Deterministic replan heuristic
         return self._replan_heuristic(original_plan, failed_step, error_message, memory)
 
-    def _parse_plan_json(self, raw_text: str, fallback_task: str) -> TaskPlan:
+    def _parse_plan_json(self, raw_text: str, fallback_task: str) -> Optional[TaskPlan]:
         # Strip potential markdown fences
         cleaned = re.sub(r"^```(?:json)?\s*", "", raw_text.strip(), flags=re.MULTILINE)
         cleaned = re.sub(r"```$", "", cleaned.strip(), flags=re.MULTILINE).strip()
@@ -143,79 +157,30 @@ class Planner:
             except Exception:
                 pass
 
-        return self._create_heuristic_plan(fallback_task)
+        return None
 
     def _create_heuristic_plan(self, task: str) -> TaskPlan:
-        """Deterministic enterprise workflow plan for invoice tasks."""
-        # Detect target file path in task prompt (supporting json, csv, txt, pdf, eml)
-        file_match = re.search(r"([\w/\\.-]+\.(?:json|csv|txt|pdf|eml|png|jpg))", task, re.IGNORECASE)
-        
-        # Check if user explicitly requests browser / web portal interaction
-        use_browser = any(kw in task.lower() for kw in ["browser", "portal", "website", "web portal", "ui", "web form"])
+        """Deterministic enterprise workflow plan powered by AI Query Parser."""
+        parsed = self.query_parser.parse_deterministic(task)
 
-        if not file_match:
-            # Direct natural language instruction with parameters in prompt (no file)
-            vendor_match = re.search(r"(?:for|vendor|company)\s+([A-Za-z0-9\s&]+?)(?:,|\swith|\sfor|\samount|\sinvoice|\sdue|\s\$|\.|$)", task, re.IGNORECASE)
-            vendor_name = vendor_match.group(1).strip().title() if vendor_match else "Nabhas Aircon"
-
-            # Comprehensive amount extraction: "$40000", "40000 amount", "amount of 40000", "for 40000"
-            amount = None
-            m = re.search(r"\$\s*([0-9][0-9,]*\.?[0-9]*)", task)
-            if m:
-                amount = float(m.group(1).replace(",", ""))
-            if amount is None:
-                m = re.search(r"([0-9][0-9,]*\.?[0-9]*)\s*(?:amount|dollars|usd|rs|inr|k\b)", task, re.IGNORECASE)
-                if m:
-                    amount = float(m.group(1).replace(",", ""))
-            if amount is None:
-                m = re.search(r"amount\s*(?:of|:|\s)?\s*([0-9][0-9,]*\.?[0-9]*)", task, re.IGNORECASE)
-                if m:
-                    amount = float(m.group(1).replace(",", ""))
-            if amount is None:
-                m = re.search(r"(?:for|total|worth)\s+([0-9][0-9,]*\.?[0-9]*)", task, re.IGNORECASE)
-                if m:
-                    amount = float(m.group(1).replace(",", ""))
-            if amount is None:
-                amount = 2500.0
-
-            inv_match = re.search(r"(?:invoice(?:\s*(?:number|num|id|#))(?:\s*[:=]?\s*|\s+))([A-Za-z0-9-_]+)", task, re.IGNORECASE)
-            if not inv_match:
-                inv_match = re.search(r"\b(INV-[A-Za-z0-9-_]+|#[0-9]+)\b", task, re.IGNORECASE)
-            invoice_number = inv_match.group(1).replace("#", "").strip() if inv_match else f"INV-{abs(hash(task)) % 100000}"
-
-            # Relative & absolute date parsing: "after one month", "after 1 week", "YYYY-MM-DD"
-            from datetime import datetime, timezone, timedelta
-            today = datetime.now(timezone.utc)
-            if re.search(r"(?:one|1|a)\s*mo(?:nth|th)", task, re.IGNORECASE):
-                due_date = (today + timedelta(days=30)).strftime("%Y-%m-%d")
-            elif re.search(r"(?:two|2)\s*months", task, re.IGNORECASE):
-                due_date = (today + timedelta(days=60)).strftime("%Y-%m-%d")
-            elif re.search(r"(?:one|1)\s*week", task, re.IGNORECASE):
-                due_date = (today + timedelta(days=7)).strftime("%Y-%m-%d")
-            elif re.search(r"(?:two|2)\s*weeks", task, re.IGNORECASE):
-                due_date = (today + timedelta(days=14)).strftime("%Y-%m-%d")
-            elif re.search(r"(\d{4}-\d{2}-\d{2})", task):
-                due_date = re.search(r"(\d{4}-\d{2}-\d{2})", task).group(1)
-            else:
-                due_date = (today + timedelta(days=30)).strftime("%Y-%m-%d")
-
+        if not parsed.file_path:
             # Materialize a draft invoice file so that all standard audit, extraction, and HITL gates run
             draft_path = Path("logs") / "draft_invoice.json"
             draft_path.parent.mkdir(parents=True, exist_ok=True)
             draft_data = {
-                "vendor_name": vendor_name,
-                "invoice_number": invoice_number,
-                "amount": amount,
-                "due_date": due_date,
-                "currency": "USD",
+                "vendor_name": parsed.vendor_name,
+                "invoice_number": parsed.invoice_number,
+                "amount": parsed.amount,
+                "due_date": parsed.due_date,
+                "currency": parsed.currency,
                 "notes": f"Generated from direct task instruction: {task}"
             }
             draft_path.write_text(json.dumps(draft_data, indent=2), encoding="utf-8")
-            file_match = re.search(r"(logs/draft_invoice\.json)", "logs/draft_invoice.json")
+            file_path = "logs/draft_invoice.json"
+        else:
+            file_path = parsed.file_path
 
-        file_path = file_match.group(1)
-
-        # Check if file requires multimodal document understanding
+        use_browser = parsed.use_browser
         is_multimodal = any(file_path.lower().endswith(ext) for ext in [".pdf", ".eml", ".png", ".jpg", ".jpeg"])
         extractor_tool = "document_extractor" if is_multimodal else "file_parser"
 
