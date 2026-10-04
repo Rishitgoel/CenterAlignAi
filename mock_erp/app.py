@@ -9,7 +9,7 @@ import uuid
 import aiosqlite
 from fastapi import FastAPI, File, HTTPException, Query, Request, Response, UploadFile, status
 from fastapi.openapi.docs import get_swagger_ui_html
-from fastapi.responses import HTMLResponse, JSONResponse, StreamingResponse
+from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 
 from mock_erp.database import (
@@ -98,6 +98,20 @@ async def portal_page():
     if portal_file.exists():
         return HTMLResponse(content=portal_file.read_text(encoding="utf-8"))
     return HTMLResponse(content="<h1>Portal not found</h1>", status_code=404)
+
+
+@app.get("/api/demo/sample-pdf", include_in_schema=False)
+async def download_sample_pdf_endpoint():
+    pdf_path = Path(__file__).parent.parent / "demo" / "invoices" / "invoice_cyberdyne_005.pdf"
+    if not pdf_path.exists():
+        pdf_path = Path("demo/invoices/invoice_cyberdyne_005.pdf")
+    if pdf_path.exists():
+        return FileResponse(
+            path=str(pdf_path),
+            filename="invoice_cyberdyne_005.pdf",
+            media_type="application/pdf",
+        )
+    raise HTTPException(status_code=404, detail="Sample invoice PDF not found")
 
 
 @app.get("/health")
