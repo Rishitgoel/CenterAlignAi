@@ -124,3 +124,20 @@ def test_scenario_5_multimodal_document_ingestion():
         assert log.evidence["erp_record"]["amount"] == 5400.0
 
     asyncio.run(_run())
+
+
+def test_scenario_6_dynamic_openapi_synthesis():
+    from tools.openapi_loader import OpenAPILoader
+    from mock_erp.app import app
+
+    spec = app.openapi()
+    dynamic_tools = OpenAPILoader.load_from_spec(spec, base_url="http://127.0.0.1:8000")
+    assert len(dynamic_tools) >= 5
+
+    # Register dynamic tools into agent registry
+    agent = Agent(interactive=False)
+    for tool in dynamic_tools:
+        agent.registry.register(tool)
+
+    assert agent.registry.get("api_health_check_health_get") is not None
+    assert agent.registry.get("api_list_invoices_invoices_get") is not None
