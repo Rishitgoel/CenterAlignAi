@@ -1,0 +1,26 @@
+[
+  {
+    "id": "scenario_1_happy_path",
+    "name": "Scenario 1: Happy Path Autonomous Processing",
+    "description": "Agent parses clean JSON invoice, resolves ERP payload, registers invoice into company ERP, writes completion report, and independently verifies state against the ERP API.",
+    "task": "Find the latest invoice from Acme Corp in demo/invoices/invoice_acme_001.json, extract the details, enter it into our ERP system, and verify completion."
+  },
+  {
+    "id": "scenario_2_error_recovery",
+    "name": "Scenario 2: Autonomous Error Recovery & Adaptation",
+    "description": "Agent attempts to parse malformed JSON file (invoice_malformed_003.json), detects JSONDecodeError, transitions to ADAPTING state, replans with plain-text regex heuristic fallback, recovers fields, and completes the workflow.",
+    "task": "Process the invoice from demo/invoices/invoice_malformed_003.json and record it into our ERP system."
+  },
+  {
+    "id": "scenario_3_human_escalation",
+    "name": "Scenario 3: Human-in-the-Loop Governance Escalation",
+    "description": "Agent parses invoice with amount $75,000 exceeding the $10,000 threshold. It transitions to ESCALATED, halts, requests interactive approval, and proceeds only upon user authorization.",
+    "task": "Process the high-value vendor invoice from demo/invoices/invoice_highvalue_004.json into our ERP system."
+  },
+  {
+    "id": "scenario_4_duplicate_rejection",
+    "name": "Scenario 4: Duplicate Invoice Prevention",
+    "description": "Attempting to re-enter an already registered invoice triggers ERP 409 Conflict rejection, demonstrating idempotent safety handling.",
+    "task": "Process the Acme Corp invoice from demo/invoices/invoice_acme_001.json into our ERP system again."
+  }
+]

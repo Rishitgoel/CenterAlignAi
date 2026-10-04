@@ -1,0 +1,5 @@
+{ vendor: Initech
+  invoice_number = INV-BAD-FORMAT
+  amount: $2,100.50
+  due_date: 2025-01-30
+  this file is intentionally malformed syntax without json quotes to test error recovery

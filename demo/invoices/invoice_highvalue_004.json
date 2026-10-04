@@ -1,0 +1,16 @@
+{
+  "vendor": "Stark Industries",
+  "invoice_number": "STK-2024-999",
+  "date": "2024-12-28",
+  "due_date": "2025-03-28",
+  "amount": 75000.00,
+  "currency": "USD",
+  "line_items": [
+    {
+      "description": "Enterprise Platform Defense System License",
+      "quantity": 1,
+      "unit_price": 75000.00,
+      "total": 75000.00
+    }
+  ]
+}

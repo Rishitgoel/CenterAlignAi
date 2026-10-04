@@ -1,0 +1,16 @@
+{
+  "vendor": "Acme Corp",
+  "invoice_number": "INV-2024-001",
+  "date": "2024-12-15",
+  "due_date": "2025-02-15",
+  "amount": 1500.00,
+  "currency": "USD",
+  "line_items": [
+    {
+      "description": "Consulting Services - December",
+      "quantity": 10,
+      "unit_price": 150.00,
+      "total": 1500.00
+    }
+  ]
+}
