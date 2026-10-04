@@ -132,6 +132,53 @@ class Planner:
         file_match = re.search(r"([\w/\\.-]+\.(?:json|csv|txt))", task, re.IGNORECASE)
         file_path = file_match.group(1) if file_match else "demo/invoices/invoice_acme_001.json"
 
+        # Check if user explicitly requests browser / web portal interaction
+        use_browser = any(kw in task.lower() for kw in ["browser", "portal", "website", "web portal", "ui", "web form"])
+
+        if use_browser:
+            return TaskPlan(
+                goal=task,
+                steps=[
+                    PlannedStep(
+                        step_number=1,
+                        description=f"Parse invoice document from {file_path}",
+                        tool_name="file_parser",
+                        tool_input={"file_path": file_path, "format": "auto"},
+                        verification_hint="Verify vendor_name and amount are extracted",
+                    ),
+                    PlannedStep(
+                        step_number=2,
+                        description="Navigate to company web portal and submit invoice form via browser",
+                        tool_name="browser_operator",
+                        tool_input={
+                            "action": "enter_invoice_form",
+                            "form_data": {
+                                "vendor_name": "{{vendor_name}}",
+                                "invoice_number": "{{invoice_number}}",
+                                "amount": "{{amount}}",
+                                "due_date": "{{due_date}}",
+                                "notes": "Submitted via CentrAlign Autonomous Browser Worker",
+                            },
+                            "headless": True,
+                            "screenshot_path": "logs/portal_submission_screenshot.png",
+                        },
+                        depends_on=1,
+                        verification_hint="Verify modal submission and toast confirmation banner",
+                    ),
+                    PlannedStep(
+                        step_number=3,
+                        description="Write task audit trail and completion report",
+                        tool_name="file_writer",
+                        tool_input={
+                            "file_path": "logs/browser_task_completion_report.md",
+                            "content": "Invoice entry completed via Playwright browser operator for {{vendor_name}} (Invoice #{{invoice_number}}). Amount: ${{amount}}.",
+                        },
+                        depends_on=2,
+                        verification_hint="Confirm completion report exists on disk",
+                    ),
+                ],
+            )
+
         return TaskPlan(
             goal=task,
             steps=[

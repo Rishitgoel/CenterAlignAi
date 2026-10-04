@@ -92,3 +92,20 @@ def test_scenario_3_human_escalation_detection():
         assert log.evidence["erp_record"]["amount"] == 75000.0
 
     asyncio.run(_run())
+
+
+def test_scenario_4_browser_ui_automation():
+    async def _run():
+        agent = Agent(interactive=False)
+        task = "Open the company web portal in the browser, extract the invoice details from demo/invoices/invoice_acme_001.json, submit the invoice form via the UI modal, and verify completion."
+        log = await agent.run(task)
+
+        assert log.final_state == AgentState.COMPLETED
+        assert "Acme Corp" in log.summary
+        assert "evidence" in log.model_dump()
+        assert "screenshot_path" in log.evidence
+        assert "erp_record" in log.evidence
+        assert log.evidence["erp_record"]["vendor_name"] == "Acme Corp"
+        assert log.evidence["erp_record"]["amount"] == 1500.0
+
+    asyncio.run(_run())

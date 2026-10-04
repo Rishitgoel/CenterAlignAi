@@ -75,6 +75,15 @@ class Observer:
             if "file_path" in data:
                 facts["report_file_path"] = data["file_path"]
 
+        # 4. Inspect Browser Operator output
+        elif step.tool_name == "browser_operator" and isinstance(data, dict):
+            if "screenshot_path" in data:
+                facts["browser_screenshot_path"] = data["screenshot_path"]
+            if "toast_feedback" in data:
+                facts["browser_feedback"] = data["toast_feedback"]
+            if "ui_status" in data:
+                facts["ui_status"] = data["ui_status"]
+
         return Observation(
             status="success",
             facts_discovered=facts,

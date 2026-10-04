@@ -101,6 +101,43 @@ class Verifier:
             else:
                 evidence["report_content"] = p.read_text(encoding="utf-8")
 
+        # 3. Verification of Browser Screenshot Evidence
+        shot_path = memory.get_fact("browser_screenshot_path")
+        if shot_path:
+            sp = Path(shot_path)
+            shot_exists = sp.exists() and sp.stat().st_size > 0
+            checks.append(
+                VerificationCheck(
+                    target="Browser UI Screenshot Evidence Captured",
+                    expected=f"Screenshot image file at {shot_path}",
+                    actual=f"Captured ({sp.stat().st_size} bytes)" if shot_exists else "Screenshot not found",
+                    matched=shot_exists,
+                )
+            )
+            if not shot_exists:
+                discrepancies.append(f"Browser UI screenshot {shot_path} was not verified.")
+            else:
+                evidence["screenshot_path"] = str(sp)
+
+        # 4. Fallback search verification if created via browser directly without returned ID
+        if created_id is None and expected_inv_num:
+            search_res = await erp_tool.execute({
+                "action": "search_invoices",
+                "invoice_number": expected_inv_num,
+            })
+            if search_res.success and isinstance(search_res.data, list) and len(search_res.data) > 0:
+                record = search_res.data[0]
+                evidence["erp_record"] = record
+                memory.add_fact("created_invoice_id", record.get("id"))
+                checks.append(
+                    VerificationCheck(
+                        target="Browser UI Form Submitted into ERP DB",
+                        expected=f"Invoice #{expected_inv_num} registered in ERP",
+                        actual=f"Found Record #{record.get('id')} ({record.get('vendor_name')})",
+                        matched=True,
+                    )
+                )
+
         all_passed = len(checks) > 0 and all(c.matched for c in checks) and len(discrepancies) == 0
 
         return VerificationResult(
