@@ -82,6 +82,14 @@ def test_query_parser_view_switch():
     assert parsed_kanban.action == "switch_view"
     assert parsed_kanban.target_view == "kanban"
 
+    parsed_audit = parser.parse_deterministic("switch to audit")
+    assert parsed_audit.action == "switch_view"
+    assert parsed_audit.target_view == "audit"
+
+    parsed_tasks = parser.parse_deterministic("show task history")
+    assert parsed_tasks.action == "switch_view"
+    assert parsed_tasks.target_view == "audit"
+
 
 def test_query_parser_crm_filter():
     parser = AIQueryParser(api_key=None)

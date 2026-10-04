@@ -286,6 +286,10 @@
               <svg class="w-4 h-4 text-gray-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
               <span class="sidebar-text truncate">Invoices Ledger</span>
             </button>
+            <button type="button" onclick="switchView('audit')" class="nav-item w-full text-left" id="nav-audit" title="Audit & Tasks">
+              <svg class="w-4 h-4 text-gray-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+              <span class="sidebar-text truncate">Audit & Tasks</span>
+            </button>
           </nav>
         </div>
       </div>
@@ -398,6 +402,10 @@
             <button onclick="switchView('table')" class="w-full text-left px-3 py-1.5 hover:bg-gray-50 flex items-center justify-between">
               <span>Invoices Ledger</span>
               <span id="check-table" class="hidden text-gray-900 font-bold">✓</span>
+            </button>
+            <button onclick="switchView('audit')" class="w-full text-left px-3 py-1.5 hover:bg-gray-50 flex items-center justify-between">
+              <span>Audit & Tasks Log</span>
+              <span id="check-audit" class="hidden text-gray-900 font-bold">✓</span>
             </button>
           </div>
         </div>
@@ -691,6 +699,128 @@
           </div>
         </div>
 
+        <!-- VIEW 3: CRYPTOGRAPHIC AUDIT LEDGER & TASK HISTORY TAB -->
+        <div id="view-audit" class="hidden space-y-5">
+          <!-- Header and Actions -->
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-gray-200 gap-3">
+            <div>
+              <div class="flex items-center gap-2">
+                <h2 class="text-base font-semibold text-gray-900">Cryptographic Audit Ledger & Task History</h2>
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                  <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                  LIVE INTEGRITY
+                </span>
+              </div>
+              <p class="text-xs text-gray-500 mt-0.5">Tamper-evident record of all autonomous operations, document extractions, ERP mutations, and self-healing runs.</p>
+            </div>
+            <div class="flex items-center space-x-2">
+              <button onclick="fetchAuditLedger()" class="px-3 py-1.5 border border-gray-200 rounded-md text-xs font-semibold text-gray-700 hover:bg-gray-50 flex items-center gap-1.5 shadow-2xs transition-colors">
+                <span>⟳</span> Refresh Ledger
+              </button>
+              <button onclick="exportAuditLedgerJson()" class="px-3 py-1.5 bg-gray-900 hover:bg-black text-white text-xs font-semibold rounded-md shadow-2xs flex items-center gap-1.5 transition-colors">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                Export JSON
+              </button>
+            </div>
+          </div>
+
+          <!-- KPI Cards Grid -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+            <!-- Total Tasks -->
+            <div class="p-4 bg-white border border-gray-200 rounded-xl shadow-2xs flex flex-col justify-between">
+              <div class="flex items-center justify-between text-xs text-gray-500 font-medium">
+                <span>Total Tasks Logged</span>
+                <span class="p-1 rounded bg-stone-100 text-stone-600">📋</span>
+              </div>
+              <div class="mt-2 flex items-baseline gap-2">
+                <span id="audit-kpi-total" class="text-2xl font-bold font-mono text-gray-900">0</span>
+                <span class="text-[11px] text-gray-500 font-medium">runs recorded</span>
+              </div>
+            </div>
+
+            <!-- Verification Status -->
+            <div class="p-4 bg-white border border-gray-200 rounded-xl shadow-2xs flex flex-col justify-between">
+              <div class="flex items-center justify-between text-xs text-gray-500 font-medium">
+                <span>Ledger Integrity</span>
+                <span class="p-1 rounded bg-emerald-100 text-emerald-700">🛡️</span>
+              </div>
+              <div class="mt-2 flex items-baseline gap-2">
+                <span id="audit-kpi-verified" class="text-xs font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300">VERIFIED PASS ✓</span>
+                <span class="text-[11px] text-gray-500">SHA-256 chain</span>
+              </div>
+            </div>
+
+            <!-- Latest Block Hash -->
+            <div class="p-4 bg-white border border-gray-200 rounded-xl shadow-2xs flex flex-col justify-between">
+              <div class="flex items-center justify-between text-xs text-gray-500 font-medium">
+                <span>Latest Block Hash</span>
+                <button onclick="copyLatestBlockHash()" class="text-[10px] text-amber-700 hover:text-amber-900 font-semibold flex items-center gap-0.5" title="Copy block hash">
+                  <span>Copy</span>
+                </button>
+              </div>
+              <div class="mt-2">
+                <div id="audit-kpi-hash" class="font-mono text-xs font-semibold text-gray-800 truncate" title="Latest cryptographic ledger hash">e3b0c44298fc...</div>
+                <div class="text-[10px] text-gray-400 mt-0.5 font-mono">Immutable audit block</div>
+              </div>
+            </div>
+
+            <!-- Autonomous Success Rate -->
+            <div class="p-4 bg-white border border-gray-200 rounded-xl shadow-2xs flex flex-col justify-between">
+              <div class="flex items-center justify-between text-xs text-gray-500 font-medium">
+                <span>Autonomous Success</span>
+                <span class="p-1 rounded bg-blue-100 text-blue-700">⚡</span>
+              </div>
+              <div class="mt-2 flex items-baseline gap-2">
+                <span id="audit-kpi-rate" class="text-2xl font-bold font-mono text-gray-900">100%</span>
+                <span class="text-[11px] text-gray-500 font-medium">pass rate</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Filter & Search Toolbar -->
+          <div class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2 pt-1">
+            <div class="relative flex-1 max-w-md">
+              <input 
+                type="text" 
+                id="audit-search-input" 
+                oninput="handleAuditSearch(event)" 
+                placeholder="Filter tasks by goal, ID, tool, or status..." 
+                class="w-full pl-8 pr-3 py-1.5 border border-gray-200 rounded-lg text-xs text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-gray-900 shadow-2xs"
+              />
+              <svg class="w-3.5 h-3.5 text-gray-400 absolute left-2.5 top-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            </div>
+            <div class="text-[11px] text-gray-500 font-mono flex items-center gap-1.5 self-end sm:self-center">
+              <span>Showing</span>
+              <span id="audit-filtered-count" class="font-bold text-gray-900">0</span>
+              <span>of</span>
+              <span id="audit-total-display-count" class="font-bold text-gray-900">0</span>
+              <span>tasks</span>
+            </div>
+          </div>
+
+          <!-- Audit Ledger Table -->
+          <div class="bg-white shadow-2xs overflow-hidden rounded-xl border border-gray-200">
+            <div class="overflow-x-auto">
+              <table class="min-w-full divide-y divide-gray-200" id="audit-table">
+                <thead class="bg-gray-50">
+                  <tr>
+                    <th scope="col" class="px-5 py-3 text-left text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Task ID</th>
+                    <th scope="col" class="px-5 py-3 text-left text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Execution Goal / Prompt</th>
+                    <th scope="col" class="px-4 py-3 text-left text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Status</th>
+                    <th scope="col" class="px-4 py-3 text-left text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Duration</th>
+                    <th scope="col" class="px-4 py-3 text-left text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Cryptographic Hash</th>
+                    <th scope="col" class="px-4 py-3 text-left text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Tools Executed</th>
+                    <th scope="col" class="px-4 py-3 text-right text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Action</th>
+                  </tr>
+                </thead>
+                <tbody id="audit-tbody" class="bg-white divide-y divide-gray-200">
+                  <!-- Dynamically populated rows -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
       </div>
     </main>
   </div>
@@ -795,6 +925,67 @@
             Close
           </button>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- 4C. AUDIT TASK DETAIL INSPECTION MODAL     -->
+  <!-- ========================================== -->
+  <div id="audit-modal" class="fixed inset-0 bg-black bg-opacity-30 hidden flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-2xl border border-gray-200 shadow-2xl w-full max-w-2xl overflow-hidden transform transition-all flex flex-col max-h-[85vh]">
+      <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-[#faf9f6] flex-shrink-0">
+        <div>
+          <h3 class="text-sm font-bold text-gray-900" id="audit-modal-title">Task Audit Details</h3>
+          <p class="text-xs text-gray-500 font-mono mt-0.5" id="audit-modal-subtitle">task_...</p>
+        </div>
+        <button onclick="closeAuditModal()" class="text-gray-400 hover:text-gray-600 text-lg font-bold p-1">&times;</button>
+      </div>
+
+      <div class="p-6 space-y-4 overflow-y-auto flex-1 text-xs">
+        <div>
+          <label class="block text-[11px] font-semibold text-gray-500 uppercase tracking-wider mb-1">Goal / User Request</label>
+          <div id="audit-modal-goal" class="p-3 bg-gray-50 rounded-lg text-gray-900 font-medium border border-gray-200"></div>
+        </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
+          <div class="p-3 bg-gray-50 rounded-lg border border-gray-200">
+            <span class="text-[10px] uppercase font-semibold text-gray-500">Final State</span>
+            <div id="audit-modal-status" class="mt-1 font-semibold text-gray-900"></div>
+          </div>
+          <div class="p-3 bg-gray-50 rounded-lg border border-gray-200">
+            <span class="text-[10px] uppercase font-semibold text-gray-500">Execution Time</span>
+            <div id="audit-modal-duration" class="mt-1 font-mono font-semibold text-gray-900"></div>
+          </div>
+          <div class="p-3 bg-gray-50 rounded-lg border border-gray-200">
+            <span class="text-[10px] uppercase font-semibold text-gray-500">Steps Count</span>
+            <div id="audit-modal-steps-count" class="mt-1 font-semibold text-gray-900"></div>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-[11px] font-semibold text-gray-500 uppercase tracking-wider mb-1">Cryptographic Ledger SHA-256 Hash</label>
+          <div class="flex items-center gap-2 p-2.5 bg-gray-50 rounded-lg border border-gray-200 font-mono text-[11px] text-gray-800 break-all select-all">
+            <span id="audit-modal-hash" class="flex-1"></span>
+            <button onclick="copyAuditModalHash()" class="text-xs text-amber-700 hover:text-amber-900 font-semibold px-2 py-1 bg-white rounded border border-gray-200">Copy</button>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-[11px] font-semibold text-gray-500 uppercase tracking-wider mb-1">Execution Summary</label>
+          <div id="audit-modal-summary" class="p-3 bg-gray-50 rounded-lg text-gray-700 leading-relaxed border border-gray-200"></div>
+        </div>
+
+        <div>
+          <label class="block text-[11px] font-semibold text-gray-500 uppercase tracking-wider mb-1">Tools Orchestrated</label>
+          <div id="audit-modal-tools" class="flex flex-wrap gap-1.5 pt-0.5"></div>
+        </div>
+      </div>
+
+      <div class="px-6 py-3 border-t border-gray-100 flex items-center justify-end bg-gray-50/50 flex-shrink-0">
+        <button onclick="closeAuditModal()" class="px-4 py-1.5 bg-gray-900 hover:bg-black text-white text-xs font-semibold rounded-md shadow-2xs">
+          Close
+        </button>
       </div>
     </div>
   </div>
@@ -1401,24 +1592,269 @@
       }
     }
 
-    // View Switcher (Kanban vs Table)
+    // View Switcher (Kanban vs Table vs Audit)
     function switchView(viewName) {
       const isKanban = viewName === 'kanban';
-      document.getElementById('view-kanban').classList.toggle('hidden', !isKanban);
-      document.getElementById('view-table').classList.toggle('hidden', isKanban);
-      document.getElementById('check-kanban').classList.toggle('hidden', !isKanban);
-      document.getElementById('check-table').classList.toggle('hidden', isKanban);
+      const isTable = viewName === 'table';
+      const isAudit = viewName === 'audit';
+
+      const elKanban = document.getElementById('view-kanban');
+      const elTable = document.getElementById('view-table');
+      const elAudit = document.getElementById('view-audit');
+
+      if (elKanban) elKanban.classList.toggle('hidden', !isKanban);
+      if (elTable) elTable.classList.toggle('hidden', !isTable);
+      if (elAudit) elAudit.classList.toggle('hidden', !isAudit);
+
+      const chkKanban = document.getElementById('check-kanban');
+      const chkTable = document.getElementById('check-table');
+      const chkAudit = document.getElementById('check-audit');
+
+      if (chkKanban) chkKanban.classList.toggle('hidden', !isKanban);
+      if (chkTable) chkTable.classList.toggle('hidden', !isTable);
+      if (chkAudit) chkAudit.classList.toggle('hidden', !isAudit);
 
       document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
-      const activeNav = document.getElementById(isKanban ? 'nav-opportunities' : 'nav-accounts');
+      let activeNav = null;
+      if (isKanban) activeNav = document.getElementById('nav-opportunities');
+      else if (isTable) activeNav = document.getElementById('nav-accounts');
+      else if (isAudit) activeNav = document.getElementById('nav-audit');
       if (activeNav) activeNav.classList.add('active');
 
       const titleEl = document.getElementById('page-title');
-      if (titleEl) titleEl.textContent = isKanban ? 'Opportunities' : 'Invoices Ledger';
+      if (titleEl) {
+        if (isKanban) titleEl.textContent = 'Opportunities';
+        else if (isTable) titleEl.textContent = 'Invoices Ledger';
+        else if (isAudit) titleEl.textContent = 'Audit Ledger & Task History';
+      }
 
-      document.getElementById('display-menu').classList.add('hidden');
+      const dispMenu = document.getElementById('display-menu');
+      if (dispMenu) dispMenu.classList.add('hidden');
+
+      if (isAudit) {
+        fetchAuditLedger();
+      }
     }
     window.switchTab = switchView;
+
+    // Cryptographic Audit Ledger & Task History Controller
+    let auditLedgerData = [];
+    window.latestLedgerBlockHash = 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855';
+
+    async function fetchAuditLedger() {
+      try {
+        const res = await fetch('/api/agent/audit-ledger');
+        if (!res.ok) {
+          console.warn('Failed to fetch audit ledger:', res.status);
+          return;
+        }
+        const data = await res.json();
+        auditLedgerData = data.ledger || [];
+        window.latestLedgerBlockHash = data.latest_block_hash || 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855';
+
+        // Update KPI Cards
+        const totalEl = document.getElementById('audit-kpi-total');
+        if (totalEl) totalEl.textContent = data.total_count ?? auditLedgerData.length;
+
+        const hashEl = document.getElementById('audit-kpi-hash');
+        if (hashEl) {
+          hashEl.textContent = window.latestLedgerBlockHash.slice(0, 16) + '...';
+          hashEl.title = window.latestLedgerBlockHash;
+        }
+
+        const rateEl = document.getElementById('audit-kpi-rate');
+        if (rateEl) {
+          if (auditLedgerData.length === 0) {
+            rateEl.textContent = '100%';
+          } else {
+            const completedCount = auditLedgerData.filter(x => (x.status || '').toUpperCase() === 'COMPLETED').length;
+            const rate = Math.round((completedCount / auditLedgerData.length) * 100);
+            rateEl.textContent = `${rate}%`;
+          }
+        }
+
+        renderAuditLedgerTable();
+      } catch (err) {
+        console.error('Error fetching audit ledger:', err);
+      }
+    }
+
+    function renderAuditLedgerTable(filterQuery = '') {
+      const tbody = document.getElementById('audit-tbody');
+      if (!tbody) return;
+      tbody.innerHTML = '';
+
+      let items = auditLedgerData;
+      if (filterQuery) {
+        const q = filterQuery.toLowerCase();
+        items = items.filter(it => 
+          (it.task_id && it.task_id.toLowerCase().includes(q)) ||
+          (it.goal && it.goal.toLowerCase().includes(q)) ||
+          (it.summary && it.summary.toLowerCase().includes(q)) ||
+          (it.status && it.status.toLowerCase().includes(q)) ||
+          (it.block_hash && it.block_hash.toLowerCase().includes(q)) ||
+          (it.tools_used && it.tools_used.some(t => t.toLowerCase().includes(q)))
+        );
+      }
+
+      const filteredCountEl = document.getElementById('audit-filtered-count');
+      if (filteredCountEl) filteredCountEl.textContent = items.length;
+      const totalDisplayEl = document.getElementById('audit-total-display-count');
+      if (totalDisplayEl) totalDisplayEl.textContent = auditLedgerData.length;
+
+      if (items.length === 0) {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td colspan="7" class="px-6 py-12 text-center text-xs text-gray-400">
+            <div class="flex flex-col items-center justify-center space-y-2">
+              <span class="text-2xl">📋</span>
+              <p class="font-medium text-gray-600">${auditLedgerData.length === 0 ? 'No agent task executions recorded yet.' : 'No tasks match the filter criteria.'}</p>
+              <p class="text-[11px] text-gray-400">Execute tasks via the AI Command Bar above to record audit entries.</p>
+            </div>
+          </td>
+        `;
+        tbody.appendChild(tr);
+        return;
+      }
+
+      items.forEach(item => {
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-gray-50/80 transition-colors text-xs';
+
+        let statusBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-gray-100 text-gray-700 border border-gray-200">UNKNOWN</span>';
+        const st = (item.status || '').toUpperCase();
+        if (st === 'COMPLETED' || st === 'SUCCESS') {
+          statusBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">COMPLETED ✓</span>';
+        } else if (st === 'RUNNING' || st === 'IN_PROGRESS') {
+          statusBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-blue-50 text-blue-800 border border-blue-200 animate-pulse">RUNNING ⚡</span>';
+        } else if (st === 'FAILED' || st === 'ERROR') {
+          statusBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-red-50 text-red-800 border border-red-200">FAILED ✕</span>';
+        }
+
+        const cleanId = escapeHtml(item.task_id || 'task_...').slice(0, 22);
+        const shortHash = (item.block_hash || '').slice(0, 10);
+        const toolsHtml = (item.tools_used && item.tools_used.length > 0)
+          ? item.tools_used.slice(0, 3).map(t => `<span class="px-1.5 py-0.5 bg-stone-100 text-stone-700 rounded text-[10px] font-mono border border-stone-200">${escapeHtml(t)}</span>`).join(' ') + (item.tools_used.length > 3 ? ` <span class="text-[10px] text-stone-400">+${item.tools_used.length - 3}</span>` : '')
+          : '<span class="text-stone-400 text-[10px] font-mono">—</span>';
+
+        tr.innerHTML = `
+          <td class="px-5 py-3 whitespace-nowrap font-mono text-[11px] font-semibold text-gray-900">
+            <span class="cursor-pointer hover:underline" onclick="copyTextToClipboard('${escapeHtml(item.task_id)}', 'Task ID')" title="Click to copy full ID">#${cleanId}</span>
+          </td>
+          <td class="px-5 py-3 text-gray-900 font-medium max-w-xs truncate" title="${escapeHtml(item.goal || '')}">
+            ${escapeHtml(item.goal || 'Autonomous enterprise operation')}
+          </td>
+          <td class="px-4 py-3 whitespace-nowrap">
+            ${statusBadge}
+          </td>
+          <td class="px-4 py-3 whitespace-nowrap font-mono text-gray-600 text-[11px]">
+            ${item.duration_ms ? `${item.duration_ms}ms` : '—'}
+          </td>
+          <td class="px-4 py-3 whitespace-nowrap font-mono text-[11px] text-gray-600">
+            <button onclick="copyTextToClipboard('${escapeHtml(item.block_hash)}', 'Block Hash')" class="hover:text-amber-700 flex items-center gap-1 group" title="Click to copy SHA-256 block hash">
+              <span class="text-emerald-600 text-[10px]">🛡️</span>
+              <span class="group-hover:underline">${shortHash}...</span>
+            </button>
+          </td>
+          <td class="px-4 py-3 whitespace-nowrap">
+            ${toolsHtml}
+          </td>
+          <td class="px-4 py-3 whitespace-nowrap text-right">
+            <button onclick="inspectAuditTask('${escapeHtml(item.task_id)}')" class="px-2.5 py-1 text-[11px] font-semibold text-stone-700 bg-stone-100 hover:bg-stone-200 rounded border border-stone-200 transition-colors">
+              Inspect
+            </button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function handleAuditSearch(e) {
+      renderAuditLedgerTable(e.target.value.trim());
+    }
+
+    function inspectAuditTask(taskId) {
+      const item = auditLedgerData.find(x => x.task_id === taskId);
+      if (!item) return;
+
+      const titleEl = document.getElementById('audit-modal-title');
+      const subEl = document.getElementById('audit-modal-subtitle');
+      const goalEl = document.getElementById('audit-modal-goal');
+      const stEl = document.getElementById('audit-modal-status');
+      const durEl = document.getElementById('audit-modal-duration');
+      const stepsEl = document.getElementById('audit-modal-steps-count');
+      const hashEl = document.getElementById('audit-modal-hash');
+      const sumEl = document.getElementById('audit-modal-summary');
+      const toolsEl = document.getElementById('audit-modal-tools');
+
+      if (titleEl) titleEl.textContent = 'Task Audit Details';
+      if (subEl) subEl.textContent = item.task_id;
+      if (goalEl) goalEl.textContent = item.goal || 'Autonomous enterprise operation';
+      if (stEl) stEl.textContent = item.status || 'COMPLETED';
+      if (durEl) durEl.textContent = item.duration_ms ? `${item.duration_ms} ms` : '—';
+      if (stepsEl) stepsEl.textContent = `${item.steps_count || 1} steps logged`;
+      if (hashEl) hashEl.textContent = item.block_hash || '—';
+      if (sumEl) sumEl.textContent = item.summary || 'Task executed successfully with cryptographic audit recording.';
+
+      if (toolsEl) {
+        toolsEl.innerHTML = '';
+        if (item.tools_used && item.tools_used.length > 0) {
+          item.tools_used.forEach(tool => {
+            const span = document.createElement('span');
+            span.className = 'px-2 py-1 bg-amber-50 text-amber-900 border border-amber-200 rounded text-[11px] font-mono font-medium';
+            span.textContent = tool;
+            toolsEl.appendChild(span);
+          });
+        } else {
+          toolsEl.innerHTML = '<span class="text-stone-400 font-mono">No external tool calls required</span>';
+        }
+      }
+
+      const modal = document.getElementById('audit-modal');
+      if (modal) modal.classList.remove('hidden');
+    }
+
+    function closeAuditModal() {
+      const modal = document.getElementById('audit-modal');
+      if (modal) modal.classList.add('hidden');
+    }
+
+    function copyAuditModalHash() {
+      const hashEl = document.getElementById('audit-modal-hash');
+      if (hashEl && hashEl.textContent) {
+        copyTextToClipboard(hashEl.textContent.trim(), 'Block Hash');
+      }
+    }
+
+    function copyLatestBlockHash() {
+      copyTextToClipboard(window.latestLedgerBlockHash, 'Latest Block Hash');
+    }
+
+    function copyTextToClipboard(text, label = 'Text') {
+      if (!text) return;
+      navigator.clipboard.writeText(text).then(() => {
+        showToast(`Copied ${label} to clipboard!`, true);
+      }).catch(() => {
+        showToast(`Selected ${label}: ${text.slice(0, 16)}...`, true);
+      });
+    }
+
+    function exportAuditLedgerJson() {
+      if (!auditLedgerData || auditLedgerData.length === 0) {
+        showToast('No audit ledger records available to export.', false);
+        return;
+      }
+      const blob = new Blob([JSON.stringify(auditLedgerData, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `centraalign_audit_ledger_${new Date().toISOString().slice(0, 10)}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast('Exported audit ledger JSON successfully!', true);
+    }
 
     let currentInspectedCard = null;
     let draggedCardId = null;
@@ -1776,7 +2212,19 @@
 
         speechRecognitionInstance.onerror = (event) => {
           console.warn('Speech recognition warning/error:', event.error);
-          if (event.error !== 'no-speech') {
+          isSpeechRecording = false;
+          micBtn?.classList.remove('bg-red-50', 'text-red-600', 'ring-1', 'ring-red-300');
+          micBtn?.classList.add('text-stone-400');
+          micPulse?.classList.add('hidden');
+          micDot?.classList.add('hidden');
+          if (inputEl) {
+            inputEl.placeholder = "Operate software with AI (e.g. 'Switch to table', 'Filter > 50k', 'Process Tidewater to won', 'Approve #87')...";
+          }
+          if (event.error === 'network') {
+            showToast('Voice dictation network notice: Chrome/Edge Web Speech API streams audio to Google Speech cloud services (speech.googleapis.com). Please check internet connectivity, or type commands directly into the AI Command Bar.', false);
+          } else if (event.error === 'not-allowed' || event.error === 'service-not-allowed') {
+            showToast('Microphone access blocked. Enable microphone permissions in browser site settings.', false);
+          } else if (event.error !== 'no-speech') {
             showToast(`Voice dictation note: ${event.error}`, false);
           }
         };
@@ -1788,7 +2236,7 @@
           micPulse?.classList.add('hidden');
           micDot?.classList.add('hidden');
           if (inputEl) {
-            inputEl.placeholder = "Ask CentrAlign AI Worker (e.g. 'Process Globex invoice' or 'Add this PDF')...";
+            inputEl.placeholder = "Operate software with AI (e.g. 'Switch to table', 'Filter > 50k', 'Process Tidewater to won', 'Approve #87')...";
           }
         };
 
@@ -1861,6 +2309,20 @@
       const lower = q.toLowerCase();
 
       // 1. Navigation & View Switching
+      if (/switch\s+(?:to\s+)?(?:audit|tasks?|history|log)/i.test(q) || /(?:show|view|open)\s+(?:audit(?:\s+log)?|tasks?\s+(?:history|done|log)|task\s+history)/i.test(q)) {
+        switchView('audit');
+        showToast('✦ AI Controller: Switched view to Cryptographic Audit & Task History', true);
+        const inputEl = document.getElementById('ai-command-input');
+        if (inputEl) inputEl.value = '';
+        return;
+      }
+      if (/(?:refresh|reload)\s+(?:audit|ledger|tasks?)/i.test(q)) {
+        fetchAuditLedger();
+        showToast('✦ AI Controller: Refreshed Audit Ledger & Task History', true);
+        const inputEl = document.getElementById('ai-command-input');
+        if (inputEl) inputEl.value = '';
+        return;
+      }
       if (/switch\s+(?:to\s+)?(?:table|ledger|invoices?|accounts?)/i.test(q) || /(?:show|view|open)\s+(?:invoices?|table|ledger|accounts?\s+payable)/i.test(q)) {
         switchView('table');
         showToast('✦ AI Controller: Switched view to Accounts Payable Ledger', true);

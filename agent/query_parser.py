@@ -209,6 +209,15 @@ class AIQueryParser:
                 confidence=1.0,
                 parser_source="deterministic",
             )
+        if any(kw in task_lower for kw in ["switch to audit", "show audit", "open audit", "task history", "show task history", "switch to tasks", "view tasks done", "audit log", "audit ledger"]):
+            return ParsedQuery(
+                raw_query=query,
+                action="switch_view",
+                target_view="audit",
+                use_browser=True,
+                confidence=1.0,
+                parser_source="deterministic",
+            )
 
         # Check sample download
         if any(kw in task_lower for kw in ["download sample", "sample pdf", "sample invoice"]):

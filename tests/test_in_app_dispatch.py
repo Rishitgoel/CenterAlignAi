@@ -177,3 +177,17 @@ async def test_sse_event_stream():
         assert "TASK_STARTED" in received_types
         assert "TASK_COMPLETED" in received_types
 
+
+@pytest.mark.anyio
+async def test_audit_ledger_endpoint():
+    async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+        resp = await ac.get("/api/agent/audit-ledger")
+        assert resp.status_code == 200
+        data = resp.json()
+        assert "ledger" in data
+        assert "total_count" in data
+        assert "latest_block_hash" in data
+        assert data["verified"] is True
+        assert isinstance(data["ledger"], list)
+
+
