@@ -449,6 +449,21 @@
               <input type="file" id="ai-file-input" onchange="handleFileSelect(event)" class="hidden" accept=".pdf,.png,.jpg,.jpeg,.json,.eml" />
             </label>
 
+            <!-- Voice Dictation / Mic Button -->
+            <button 
+              type="button" 
+              id="ai-mic-btn" 
+              onclick="toggleSpeechRecognition()" 
+              title="Voice Dictation (Speech-to-Text)" 
+              class="relative p-1.5 text-stone-400 hover:text-stone-700 hover:bg-stone-100 rounded-md transition-all flex items-center justify-center flex-shrink-0"
+            >
+              <svg id="ai-mic-icon" class="w-3.5 h-3.5 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 003-3V5a3 3 0 00-6 0v6a3 3 0 003 3z"/>
+              </svg>
+              <span id="ai-mic-pulse" class="hidden absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-red-500 animate-ping"></span>
+              <span id="ai-mic-dot" class="hidden absolute -top-0.5 -right-0.5 w-2 h-2 rounded-full bg-red-500"></span>
+            </button>
+
             <!-- Dispatch Action Button -->
             <button 
               type="submit" 
@@ -1744,6 +1759,79 @@
       if (badge) {
         badge.classList.add('hidden');
         badge.classList.remove('flex');
+      }
+    }
+
+    // Voice Dictation / Speech-to-Text Controller
+    let speechRecognitionInstance = null;
+    let isSpeechRecording = false;
+
+    function toggleSpeechRecognition() {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      if (!SpeechRecognition) {
+        showToast('Voice dictation is not supported in this browser. Please use Chrome, Edge, or Safari.', false);
+        return;
+      }
+
+      const micBtn = document.getElementById('ai-mic-btn');
+      const micPulse = document.getElementById('ai-mic-pulse');
+      const micDot = document.getElementById('ai-mic-dot');
+      const inputEl = document.getElementById('ai-command-input');
+
+      if (isSpeechRecording && speechRecognitionInstance) {
+        speechRecognitionInstance.stop();
+        return;
+      }
+
+      try {
+        speechRecognitionInstance = new SpeechRecognition();
+        speechRecognitionInstance.continuous = false;
+        speechRecognitionInstance.interimResults = true;
+        speechRecognitionInstance.lang = 'en-US';
+
+        speechRecognitionInstance.onstart = () => {
+          isSpeechRecording = true;
+          micBtn?.classList.add('bg-red-50', 'text-red-600', 'ring-1', 'ring-red-300');
+          micBtn?.classList.remove('text-stone-400');
+          micPulse?.classList.remove('hidden');
+          micDot?.classList.remove('hidden');
+          if (inputEl) {
+            inputEl.placeholder = 'Listening... Speak your prompt now (e.g. "Create invoice for Nabhas Aircon")...';
+          }
+        };
+
+        speechRecognitionInstance.onresult = (event) => {
+          let transcript = '';
+          for (let i = event.resultIndex; i < event.results.length; ++i) {
+            transcript += event.results[i][0].transcript;
+          }
+          if (inputEl && transcript) {
+            inputEl.value = transcript;
+          }
+        };
+
+        speechRecognitionInstance.onerror = (event) => {
+          console.warn('Speech recognition warning/error:', event.error);
+          if (event.error !== 'no-speech') {
+            showToast(`Voice dictation note: ${event.error}`, false);
+          }
+        };
+
+        speechRecognitionInstance.onend = () => {
+          isSpeechRecording = false;
+          micBtn?.classList.remove('bg-red-50', 'text-red-600', 'ring-1', 'ring-red-300');
+          micBtn?.classList.add('text-stone-400');
+          micPulse?.classList.add('hidden');
+          micDot?.classList.add('hidden');
+          if (inputEl) {
+            inputEl.placeholder = "Ask CentrAlign AI Worker (e.g. 'Process Globex invoice' or 'Add this PDF')...";
+          }
+        };
+
+        speechRecognitionInstance.start();
+      } catch (err) {
+        console.error('Failed to initialize speech recognition:', err);
+        showToast('Unable to access audio microphone input.', false);
       }
     }
 
