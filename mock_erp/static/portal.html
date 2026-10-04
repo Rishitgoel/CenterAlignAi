@@ -1138,8 +1138,12 @@
     function handleDragStart(e, cardId) {
       draggedCardId = cardId;
       isDraggingCard = true;
-      e.dataTransfer.setData('text/plain', cardId);
-      e.dataTransfer.effectAllowed = 'move';
+      if (e.dataTransfer) {
+        try {
+          e.dataTransfer.setData('text/plain', cardId);
+          e.dataTransfer.effectAllowed = 'move';
+        } catch (err) {}
+      }
       const el = document.getElementById(`deal-card-${cardId}`);
       if (el) {
         setTimeout(() => el.classList.add('dragging'), 0);
@@ -1162,7 +1166,11 @@
 
     function handleDragOver(e) {
       e.preventDefault();
-      e.dataTransfer.dropEffect = 'move';
+      if (e.dataTransfer) {
+        try {
+          e.dataTransfer.dropEffect = 'move';
+        } catch (err) {}
+      }
       const col = e.currentTarget;
       if (col && !col.classList.contains('drag-over')) {
         col.classList.add('drag-over');
@@ -1182,7 +1190,13 @@
       document.querySelectorAll('.kanban-col, .kanban-cards-container').forEach(c => {
         c.classList.remove('drag-over');
       });
-      const cardId = e.dataTransfer.getData('text/plain') || draggedCardId;
+      let cardId = draggedCardId;
+      if (e.dataTransfer) {
+        try {
+          const dtId = e.dataTransfer.getData('text/plain');
+          if (dtId) cardId = dtId;
+        } catch (err) {}
+      }
       if (cardId && targetStage) {
         moveCardToStage(cardId, targetStage);
       }
@@ -1351,6 +1365,7 @@
     initSidebar();
     renderKanbanBoard();
     fetchInvoices();
+    setInterval(fetchInvoices, 4000);
   </script>
 </body>
 </html>
