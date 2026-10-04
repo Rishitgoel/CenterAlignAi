@@ -2830,6 +2830,7 @@
 
       const card = document.createElement('div');
       card.id = `step-card-${ev.step_number}`;
+      card.dataset.stepNumber = String(ev.step_number);
       card.className = 'p-3 rounded-xl bg-white border border-[#e5e2da] shadow-2xs text-xs space-y-1.5 transition-all';
       
       card.innerHTML = `
@@ -2853,7 +2854,10 @@
     }
 
     function updateStepCompleteCard(ev) {
-      const card = document.getElementById(`step-card-${ev.step_number}`);
+      const feed = document.getElementById('drawer-step-feed');
+      // Target the most recently added card for this step number (correctly handles autonomous self-heal replans)
+      const cards = feed ? feed.querySelectorAll(`[id="step-card-${ev.step_number}"], [data-step-number="${ev.step_number}"]`) : [];
+      const card = cards.length > 0 ? cards[cards.length - 1] : document.getElementById(`step-card-${ev.step_number}`);
       if (!card) return;
 
       const statusRow = card.querySelector('.step-status-row');
