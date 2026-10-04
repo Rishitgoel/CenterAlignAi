@@ -45,7 +45,9 @@ class BrowserOperatorTool(Tool):
 
     async def execute(self, params: Dict[str, Any]) -> ToolResult:
         action = params.get("action")
-        url = params.get("url") or f"{settings.erp_base_url}/portal"
+        url = params.get("url")
+        if not url or "127.0.0.1:8000" in url or "localhost:8000" in url:
+            url = f"{settings.erp_base_url}/portal"
         headless = params.get("headless", True)
 
         try:

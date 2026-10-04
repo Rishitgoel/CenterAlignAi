@@ -11,44 +11,7 @@ from mock_erp.app import app
 from mock_erp.database import init_db
 
 
-class ServerThread(threading.Thread):
-    def __init__(self):
-        super().__init__(daemon=True)
-        config = uvicorn.Config(app, host="127.0.0.1", port=8000, log_level="warning")
-        self.server = uvicorn.Server(config)
-
-    def run(self):
-        self.server.run()
-
-    def stop(self):
-        self.server.should_exit = True
-
-
-_server_thread = None
-
-
-def setup_module():
-    global _server_thread
-    asyncio.run(init_db())
-    # Only spawn background server if not already running on port 8000
-    import socket
-    is_running = False
-    try:
-        with socket.create_connection(("127.0.0.1", 8000), timeout=0.5):
-            is_running = True
-    except OSError:
-        is_running = False
-
-    if not is_running:
-        _server_thread = ServerThread()
-        _server_thread.start()
-        time.sleep(1.5)  # Wait for uvicorn to bind
-
-
 def teardown_module():
-    global _server_thread
-    if _server_thread:
-        _server_thread.stop()
 
     # Re-seed sample demonstration invoices so Web Portal is populated after test runs
     async def _restore_demo_invoices():

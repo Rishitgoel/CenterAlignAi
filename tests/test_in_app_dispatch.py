@@ -1,7 +1,11 @@
 import asyncio
 import io
 import json
+import socket
+import threading
+import time
 import pytest
+import uvicorn
 from httpx import ASGITransport, AsyncClient
 import aiosqlite
 
@@ -17,7 +21,6 @@ async def fresh_db():
         await conn.execute("DELETE FROM invoices")
         await conn.commit()
     yield
-    # Cleanup after test
     async with aiosqlite.connect(settings.database_path) as conn:
         await conn.execute("DELETE FROM invoices")
         await conn.commit()
