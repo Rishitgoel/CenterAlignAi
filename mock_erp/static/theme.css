@@ -1,0 +1,127 @@
+/* ==========================================================================
+   CentrAlign AI — Design System Tokens & Typography Foundation
+   Reference: 21st-crm.vercel.app/opportunities
+   Typography: Google Sans (Enforced Globally)
+   ========================================================================== */
+
+/* 1. Typography Imports */
+@import url('https://fonts.googleapis.com/css2?family=Product+Sans:wght@400;700&family=Google+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+@import url('https://fonts.cdnfonts.com/css/google-sans');
+
+:root {
+  /* Font Family Definitions */
+  --font-sans: 'Google Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+  /* Neutral Canvas & Surfaces */
+  --bg-app: #ffffff;
+  --bg-canvas: #ffffff;
+  --bg-sidebar: #faf9f6;
+  --bg-sidebar-hover: #f3f1ec;
+  --bg-card: #ffffff;
+  --bg-card-hover: #fbfaf7;
+  --bg-muted: #f4f2ed;
+
+  /* Subtle Warm Accents */
+  --brand-accent: #b45309;
+  --brand-accent-subtle: #fef3c7;
+
+  /* Rich Ink & Typography Colors */
+  --text-primary: #18181b;
+  --text-secondary: #52525b;
+  --text-muted: #71717a;
+  --text-subtle: #a1a1aa;
+
+  /* Crisp 1px Neutral Borders */
+  --border-sidebar: #eae6de;
+  --border-card: #e5e2da;
+  --border-card-hover: #cfcabb;
+  --border-divider: #ede9e1;
+  --border-subtle: #f0ede6;
+
+  /* Toned-down Stage Ring Colors (21st-CRM aesthetic) */
+  --stage-qual-ring: #94a3b8;
+  --stage-disc-ring: #60a5fa;
+  --stage-prop-ring: #f59e0b;
+  --stage-nego-ring: #c084fc;
+  --stage-won-ring: #34d399;
+
+  /* Toned-down Muted Badges (Soft, Desaturated) */
+  --pill-bg: #f4f4f5;
+  --pill-text: #52525b;
+
+  --badge-sage-bg: #f2f7f4;
+  --badge-sage-text: #2f523e;
+  --badge-sage-border: #d5e5db;
+
+  --badge-clay-bg: #faf4f4;
+  --badge-clay-text: #5c3535;
+  --badge-clay-border: #eddcdc;
+
+  /* Border Radii */
+  --radius-card: 12px;
+  --radius-inner: 8px;
+  --radius-control: 6px;
+  --radius-pill: 9999px;
+
+  /* Elevations & Shadows */
+  --shadow-card: 0 1px 2px 0 rgba(0, 0, 0, 0.03);
+  --shadow-card-hover: 0 4px 12px 0 rgba(0, 0, 0, 0.05), 0 1px 3px 0 rgba(0, 0, 0, 0.03);
+  --shadow-modal: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
+}
+
+/* 2. Global Universal Typography Rules */
+*, *::before, *::after {
+  box-sizing: border-box;
+  font-family: var(--font-sans) !important;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: var(--bg-app);
+  color: var(--text-primary);
+  font-family: var(--font-sans) !important;
+  font-size: 13px;
+  line-height: 1.5;
+  letter-spacing: -0.01em;
+}
+
+code, pre, .mono, .font-mono, .amount-val, .badge-mono, .invoice-code {
+  font-family: var(--font-mono) !important;
+  letter-spacing: -0.02em;
+}
+
+.font-sans { font-family: var(--font-sans) !important; }
+.font-mono { font-family: var(--font-mono) !important; }
+
+/* Subtle Stage Rings */
+.stage-ring {
+  width: 13px;
+  height: 13px;
+  border-radius: 50%;
+  border-width: 1.5px;
+  border-style: solid;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.stage-ring-qual { border-color: var(--stage-qual-ring); }
+.stage-ring-disc { border-color: var(--stage-disc-ring); }
+.stage-ring-prop { border-color: var(--stage-prop-ring); }
+.stage-ring-nego { border-color: var(--stage-nego-ring); }
+.stage-ring-won {
+  border-color: var(--stage-won-ring);
+  color: #2f523e;
+  font-size: 9px;
+  font-weight: 700;
+}
+
+/* Smooth Transitions */
+.transition-smooth {
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}

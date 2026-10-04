@@ -3,173 +3,958 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CentrAlign Enterprise Financial Portal</title>
-  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <title>Opportunities — CentrAlign AI</title>
+  
+  <!-- Design System CSS Tokens (Google Sans Enforced Globally) -->
+  <link rel="stylesheet" href="/static/theme.css">
+  
+  <!-- Tailwind CSS CDN for utility grid and layout -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
   <style>
-    .toast { transition: all 0.3s ease; }
+    /* Collapsible Sidebar Styles */
+    .sidebar {
+      width: 256px;
+      transition: width 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      background-color: var(--bg-sidebar);
+      border-right: 1px solid var(--border-sidebar);
+    }
+    .sidebar.collapsed {
+      width: 64px;
+    }
+    .sidebar.collapsed .sidebar-text,
+    .sidebar.collapsed .sidebar-section-title,
+    .sidebar.collapsed .sidebar-hide-collapsed {
+      display: none !important;
+    }
+    .sidebar.collapsed .nav-item {
+      justify-content: center;
+      padding-left: 0;
+      padding-right: 0;
+    }
+
+    /* Navigation Item States */
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 6px 10px;
+      border-radius: var(--radius-inner);
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      transition: all 0.12s ease;
+      cursor: pointer;
+    }
+    .nav-item:hover {
+      background-color: var(--bg-sidebar-hover);
+      color: var(--text-primary);
+    }
+    .nav-item.active {
+      background-color: #ebe7de;
+      color: var(--text-primary);
+      font-weight: 600;
+    }
+
+    /* 5-Stage Kanban Column Grid */
+    .kanban-col {
+      min-width: 0;
+      width: 100%;
+      background: transparent;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Kanban Card Anatomy */
+    .opportunity-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-card);
+      border-radius: var(--radius-card);
+      padding: 12px 14px;
+      margin-bottom: 10px;
+      box-shadow: var(--shadow-card);
+      transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+      cursor: pointer;
+      user-select: none;
+    }
+    .opportunity-card:hover {
+      border-color: var(--border-card-hover);
+      box-shadow: var(--shadow-card-hover);
+      transform: translateY(-1px);
+    }
+
+    .card-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 6px;
+      line-height: 1.35;
+    }
+
+    .card-row {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-top: 4px;
+    }
+    .card-row svg {
+      width: 13px;
+      height: 13px;
+      color: #949086;
+      flex-shrink: 0;
+    }
+
+    /* Assignee Avatar Badge */
+    .avatar-badge {
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #e5e2da;
+      color: #4b4843;
+      font-size: 10px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    /* Custom scrollbars */
+    ::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #e2ded5;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #c8c4ba;
+    }
   </style>
 </head>
-<body class="bg-gray-50 min-h-screen text-gray-800">
+<body class="min-h-screen flex flex-col bg-white text-gray-900">
 
-  <!-- Navigation Bar -->
-  <header class="bg-indigo-900 text-white shadow-md">
-    <div class="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-      <div class="flex items-center space-x-3">
-        <div class="w-8 h-8 rounded bg-indigo-500 flex items-center justify-center font-bold text-lg">C</div>
-        <h1 class="text-xl font-bold tracking-tight">CentrAlign ERP Financial Portal</h1>
-      </div>
-      <div class="flex items-center space-x-4 text-sm">
-        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-          ● System Operational
-        </span>
-        <span class="text-indigo-200">Operator: AutoBot-01</span>
-      </div>
-    </div>
-  </header>
+  <!-- Main App Frame -->
+  <div class="flex flex-1 min-h-screen w-full">
 
-  <!-- Main Content -->
-  <main class="max-w-7xl mx-auto px-6 py-8">
-    <div class="flex justify-between items-center mb-6">
+    <!-- ========================================== -->
+    <!-- 1. LEFT COLLAPSIBLE SIDEBAR                -->
+    <!-- ========================================== -->
+    <aside id="app-sidebar" class="sidebar flex flex-col justify-between p-3 select-none">
       <div>
-        <h2 class="text-2xl font-bold text-gray-900">Accounts Payable Invoices</h2>
-        <p class="text-sm text-gray-500">Internal company ledger and accounts receivable registry</p>
-      </div>
-      <button id="open-invoice-modal-btn" onclick="openModal()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 flex items-center space-x-2">
-        <span>+ Record New Invoice</span>
-      </button>
-    </div>
-
-    <!-- Alert / Toast Banner -->
-    <div id="toast-banner" class="hidden mb-6 p-4 rounded-md border text-sm flex items-center justify-between">
-      <span id="toast-message"></span>
-      <button onclick="dismissToast()" class="text-gray-500 hover:text-gray-700">&times;</button>
-    </div>
-
-    <!-- Invoices Table -->
-    <div class="bg-white shadow overflow-hidden sm:rounded-lg border border-gray-200 mb-10">
-      <table class="min-w-full divide-y divide-gray-200" id="invoices-table">
-        <thead class="bg-gray-50">
-          <tr>
-            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
-            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Vendor</th>
-            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Invoice #</th>
-            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Amount</th>
-            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Due Date</th>
-            <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
-          </tr>
-        </thead>
-        <tbody id="invoices-tbody" class="bg-white divide-y divide-gray-200">
-          <!-- Loaded dynamically -->
-        </tbody>
-      </table>
-    </div>
-
-    <!-- Human-in-the-Loop Governance Section -->
-    <div class="border-t border-gray-200 pt-8">
-      <div class="flex items-center justify-between mb-4">
-        <div>
-          <h3 class="text-xl font-bold text-gray-900 flex items-center space-x-2">
-            <span>🛡️ Autonomous Human-in-the-Loop Approval Queue</span>
-            <span id="hitl-count-badge" class="ml-2 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-red-100 text-red-800">0 Pending</span>
-          </h3>
-          <p class="text-sm text-gray-500">High-stakes policy escalations awaiting human operator review</p>
-        </div>
-        <button onclick="fetchPendingApprovals()" class="text-sm text-indigo-600 hover:text-indigo-800 font-medium">↻ Refresh Queue</button>
-      </div>
-
-      <div id="hitl-queue-container" class="space-y-4">
-        <!-- Rendered dynamically -->
-        <p class="text-sm text-gray-400 italic">No tasks currently awaiting approval.</p>
-      </div>
-    </div>
-  </main>
-
-  <!-- Modal Dialog -->
-  <div id="invoice-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 hidden overflow-y-auto h-full w-full z-50">
-    <div class="relative top-20 mx-auto p-6 border w-full max-w-md shadow-xl rounded-lg bg-white">
-      <div class="flex justify-between items-center pb-3 border-b border-gray-200 mb-4">
-        <h3 class="text-lg font-semibold text-gray-900" id="modal-title">Record Vendor Invoice</h3>
-        <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600 font-bold">&times;</button>
-      </div>
-
-      <form id="invoice-form" onsubmit="submitInvoice(event)" class="space-y-4">
-        <div>
-          <label for="vendor-name-input" class="block text-sm font-medium text-gray-700">Vendor Name</label>
-          <input type="text" id="vendor-name-input" required placeholder="e.g. Acme Corp" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-        </div>
-
-        <div>
-          <label for="invoice-number-input" class="block text-sm font-medium text-gray-700">Invoice Reference Number</label>
-          <input type="text" id="invoice-number-input" required placeholder="e.g. INV-2025-001" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
-        </div>
-
-        <div class="grid grid-cols-2 gap-4">
-          <div>
-            <label for="amount-input" class="block text-sm font-medium text-gray-700">Amount (USD)</label>
-            <input type="number" step="0.01" id="amount-input" required placeholder="0.00" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+        <!-- Account Switcher & Collapse Controls -->
+        <div class="flex items-center justify-between pb-3 mb-2 border-b border-gray-200 relative">
+          <div class="relative flex-1 mr-2">
+            <button id="account-menu-trigger" onclick="toggleAccountMenu()" class="flex items-center space-x-2 overflow-hidden hover:bg-gray-100 p-1 rounded-md transition-colors text-left w-full">
+              <span class="avatar-badge text-xs">RG</span>
+              <div class="sidebar-text truncate">
+                <div class="text-xs font-bold text-gray-900 flex items-center gap-1">
+                  Rishit Goel
+                  <svg class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+                </div>
+              </div>
+            </button>
+            <!-- Account Switcher Dropdown Popover -->
+            <div id="account-menu" class="hidden absolute left-0 top-10 w-60 bg-white border border-gray-200 rounded-xl shadow-xl py-2 z-50 text-xs">
+              <div class="px-3 py-2 border-b border-gray-100">
+                <p class="font-bold text-gray-900">Rishit Goel</p>
+                <p class="text-[11px] text-gray-500 font-mono">rishit.goel@centralign.ai</p>
+                <span class="inline-flex items-center gap-1 mt-1 text-[10px] font-medium text-stone-600 bg-stone-100 px-1.5 py-0.5 rounded border border-stone-200">
+                  <span class="w-1.5 h-1.5 rounded-full bg-stone-400"></span> Active Operator
+                </span>
+              <div class="pt-1">
+                <a href="/docs" target="_blank" class="block px-3 py-1.5 hover:bg-gray-50 text-gray-600 flex items-center justify-between">
+                  <span>API Documentation</span>
+                  <span class="text-gray-400">↗</span>
+                </a>
+              </div>
+            </div>
           </div>
-          <div>
-            <label for="due-date-input" class="block text-sm font-medium text-gray-700">Due Date</label>
-            <input type="date" id="due-date-input" required class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm">
+
+          <div class="flex items-center space-x-1">
+            <button onclick="toggleSidebarSearch()" class="p-1 rounded text-gray-400 hover:text-gray-700 hover:bg-gray-100 sidebar-hide-collapsed" title="Quick Search (Ctrl+K)">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            </button>
+            <button onclick="toggleSidebar()" class="p-1 rounded text-gray-400 hover:text-gray-700 hover:bg-gray-100" title="Toggle Sidebar">
+              <svg id="sidebar-collapse-icon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7"/></svg>
+            </button>
           </div>
         </div>
 
-        <div>
-          <label for="notes-input" class="block text-sm font-medium text-gray-700">Notes (Optional)</label>
-          <textarea id="notes-input" rows="2" placeholder="Recorded via autonomous agent" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"></textarea>
+        <!-- Workspace Navigation (100% Functional) -->
+        <div class="mb-4">
+          <div class="sidebar-section-title px-3 py-1 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
+            <span>Workspace</span>
+          </div>
+          <nav class="space-y-0.5 mt-1">
+            <button type="button" onclick="switchView('kanban')" class="nav-item w-full text-left active" id="nav-opportunities">
+              <svg class="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+              <span class="sidebar-text">Opportunities</span>
+            </button>
+            <button type="button" onclick="switchView('table')" class="nav-item w-full text-left" id="nav-accounts">
+              <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+              <span class="sidebar-text">Invoices Ledger</span>
+            </button>
+          </nav>
+        </div>
+      </div>
+
+      <!-- Sidebar Footer: System Status -->
+      <div class="pt-3 border-t border-gray-200">
+        <div class="flex items-center space-x-2 px-2 py-1">
+          <span class="w-2 h-2 rounded-full bg-stone-400"></span>
+          <span class="sidebar-text text-[11px] font-medium text-stone-500">CentrAlign AI · System Active</span>
+        </div>
+      </div>
+    </aside>
+
+    <!-- ========================================== -->
+    <!-- 2. MAIN CONTENT AREA                       -->
+    <!-- ========================================== -->
+    <main class="flex-1 flex flex-col min-w-0 bg-white">
+      
+      <!-- Top Action Bar (Row 1) -->
+      <header id="app-header" class="h-12 border-b border-gray-200 px-6 flex items-center justify-between bg-white z-10 relative">
+        <div class="flex items-center space-x-2 text-sm font-semibold text-gray-900">
+          <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+          <span id="page-title">Opportunities</span>
         </div>
 
-        <div class="pt-4 flex justify-end space-x-3 border-t border-gray-100">
-          <button type="button" onclick="closeModal()" class="px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50">Cancel</button>
-          <button type="submit" id="submit-invoice-btn" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-md shadow-sm text-sm">Save Invoice</button>
+        <!-- Primary Action Button (Preserves DOM ID for Playwright) -->
+        <button id="open-invoice-modal-btn" onclick="openModal()" class="px-3 py-1 bg-white hover:bg-gray-50 text-gray-900 border border-gray-300 text-xs font-semibold rounded-md shadow-2xs flex items-center gap-1.5 transition-all active:scale-95">
+          <span>+</span>
+          <span>Create opportunity</span>
+        </button>
+      </header>
+
+      <!-- Toolbar (Row 2: Filter, Search, Display) -->
+      <div class="h-10 border-b border-gray-100 px-6 flex items-center justify-between bg-white z-10 relative">
+        <div class="flex items-center space-x-2">
+          <!-- Filter Dropdown Trigger & Popover -->
+          <div class="relative">
+            <button id="filter-menu-trigger" onclick="toggleFilterMenu()" class="px-2.5 py-1 border border-gray-200 rounded-md text-xs font-medium text-gray-700 hover:bg-gray-50 flex items-center gap-1.5 shadow-2xs">
+              <svg class="w-3.5 h-3.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/></svg>
+              <span>Filter</span>
+              <span id="filter-active-dot" class="hidden w-1.5 h-1.5 rounded-full bg-stone-500"></span>
+            </button>
+
+            <!-- Filter Popover Dropdown -->
+            <div id="filter-menu" class="hidden absolute left-0 mt-1 w-64 bg-white border border-gray-200 rounded-xl shadow-xl p-3 z-50 text-xs">
+              <div class="flex items-center justify-between pb-2 border-b border-gray-100">
+                <span class="font-bold text-gray-900">Filter Pipeline</span>
+                <button onclick="resetFilters()" class="text-[11px] text-gray-600 hover:text-black font-medium">Reset</button>
+              </div>
+              <div class="space-y-3 pt-2">
+                <div>
+                  <label class="block text-[11px] font-semibold text-gray-500 uppercase tracking-wider mb-1">Stage</label>
+                  <select id="filter-stage" onchange="applyFilters()" class="w-full border border-gray-200 rounded px-2 py-1 text-xs text-gray-800 bg-white focus:outline-none focus:ring-1 focus:ring-gray-900">
+                    <option value="all">All Stages</option>
+                    <option value="qualification">Qualification</option>
+                    <option value="discovery">Discovery</option>
+                    <option value="proposal">Proposal</option>
+                    <option value="negotiation">Negotiation</option>
+                    <option value="won">Closed Won</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-[11px] font-semibold text-gray-500 uppercase tracking-wider mb-1">Deal Owner</label>
+                  <select id="filter-owner" onchange="applyFilters()" class="w-full border border-gray-200 rounded px-2 py-1 text-xs text-gray-800 bg-white focus:outline-none focus:ring-1 focus:ring-gray-900">
+                    <option value="all">All Owners</option>
+                    <option value="Rishit Goel">Rishit Goel</option>
+                    <option value="CentrAlign Agent">CentrAlign Agent</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="block text-[11px] font-semibold text-gray-500 uppercase tracking-wider mb-1">Min Value</label>
+                  <div class="flex items-center gap-1.5">
+                    <button type="button" onclick="setMinAmount(0)" class="filter-pill active-pill flex-1 py-1 px-1.5 rounded text-[11px] font-medium border border-gray-200 hover:bg-gray-50" data-amount="0">$0</button>
+                    <button type="button" onclick="setMinAmount(10000)" class="filter-pill flex-1 py-1 px-1.5 rounded text-[11px] font-medium border border-gray-200 hover:bg-gray-50" data-amount="10000">$10k+</button>
+                    <button type="button" onclick="setMinAmount(50000)" class="filter-pill flex-1 py-1 px-1.5 rounded text-[11px] font-medium border border-gray-200 hover:bg-gray-50" data-amount="50000">$50k+</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Live Search Input -->
+          <div class="relative">
+            <input type="text" id="live-search-input" oninput="filterAllRecords()" placeholder="Search..." class="pl-7 pr-8 py-1 border border-gray-200 rounded-md text-xs text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-1 focus:ring-gray-900 w-32 focus:w-48 transition-all duration-150">
+            <svg class="w-3.5 h-3.5 text-gray-400 absolute left-2 top-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            <kbd class="hidden sm:inline-block absolute right-1.5 top-1.5 text-[9px] text-gray-400 font-mono bg-gray-100 px-1 py-0.2 rounded border border-gray-200 leading-none">Ctrl+K</kbd>
+          </div>
+        </div>
+
+        <!-- Right: Display View Dropdown -->
+        <div class="relative">
+          <button id="display-menu-trigger" onclick="toggleDisplayMenu()" class="px-2.5 py-1 border border-gray-200 rounded-md text-xs font-medium text-gray-700 hover:bg-gray-50 flex items-center gap-1 shadow-2xs">
+            <svg class="w-3.5 h-3.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"/></svg>
+            <span>Display</span>
+          </button>
+          <div id="display-menu" class="hidden absolute right-0 mt-1 w-44 bg-white border border-gray-200 rounded-lg shadow-lg py-1 z-50 text-xs">
+            <button onclick="switchView('kanban')" class="w-full text-left px-3 py-1.5 hover:bg-gray-50 flex items-center justify-between">
+              <span>Kanban Board</span>
+              <span id="check-kanban" class="text-gray-900 font-bold">✓</span>
+            </button>
+            <button onclick="switchView('table')" class="w-full text-left px-3 py-1.5 hover:bg-gray-50 flex items-center justify-between">
+              <span>Invoices Ledger</span>
+              <span id="check-table" class="hidden text-gray-900 font-bold">✓</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Feedback / Alert Toast Banner (Preserved for Playwright Tests) -->
+      <div id="toast-banner" class="hidden mx-6 mt-3 p-3 rounded-lg border text-xs flex items-center justify-between shadow-2xs transition-all duration-200">
+        <div class="flex items-center space-x-2">
+          <span id="toast-icon">✓</span>
+          <span id="toast-message" class="font-medium"></span>
+        </div>
+        <button onclick="dismissToast()" class="text-gray-400 hover:text-gray-600 font-bold ml-4">&times;</button>
+      </div>
+
+      <!-- ========================================== -->
+      <!-- 3. WORKSPACE VIEWS CONTAINER               -->
+      <!-- ========================================== -->
+      <div class="flex-1 p-6 overflow-y-auto">
+
+        <!-- VIEW 1: 5-STAGE KANBAN OPPORTUNITY PIPELINE (DEFAULT) -->
+        <div id="view-kanban" class="space-y-6">
+          <div class="grid grid-cols-1 md:grid-cols-5 gap-4 items-stretch">
+            
+            <!-- STAGE 1: Qualification -->
+            <div class="kanban-col" data-stage="qualification">
+              <div class="flex items-center justify-between pb-3 mb-3 border-b border-gray-100">
+                <div class="flex items-center space-x-2">
+                  <span class="stage-ring stage-ring-qual"></span>
+                  <h3 class="text-xs font-semibold text-gray-800">Qualification</h3>
+                  <span class="text-[11px] font-medium px-1.5 py-0.2 rounded-full bg-gray-100 text-gray-500" id="count-qual">0</span>
+                </div>
+                <button onclick="openModalWithStage('qualification')" class="text-gray-400 hover:text-gray-700 text-sm font-semibold">+</button>
+              </div>
+              <div class="kanban-cards-container" id="cards-qual"></div>
+              <button onclick="openModalWithStage('qualification')" class="mt-2 mb-3 w-full py-2 border border-dashed border-gray-200 rounded-lg text-xs font-medium text-gray-400 hover:text-gray-700 hover:border-gray-300 transition-colors">
+                + Create opportunity
+              </button>
+              <div class="mt-auto pt-3 border-t border-gray-100 flex items-center space-x-1.5 text-xs text-gray-500 font-medium">
+                <span class="text-gray-400">◇</span>
+                <span class="font-mono font-semibold text-gray-700" id="sum-qual">$0.00</span>
+              </div>
+            </div>
+
+            <!-- STAGE 2: Discovery -->
+            <div class="kanban-col" data-stage="discovery">
+              <div class="flex items-center justify-between pb-3 mb-3 border-b border-gray-100">
+                <div class="flex items-center space-x-2">
+                  <span class="stage-ring stage-ring-disc"></span>
+                  <h3 class="text-xs font-semibold text-gray-800">Discovery</h3>
+                  <span class="text-[11px] font-medium px-1.5 py-0.2 rounded-full bg-gray-100 text-gray-500" id="count-disc">0</span>
+                </div>
+                <button onclick="openModalWithStage('discovery')" class="text-gray-400 hover:text-gray-700 text-sm font-semibold">+</button>
+              </div>
+              <div class="kanban-cards-container" id="cards-disc"></div>
+              <button onclick="openModalWithStage('discovery')" class="mt-2 mb-3 w-full py-2 border border-dashed border-gray-200 rounded-lg text-xs font-medium text-gray-400 hover:text-gray-700 hover:border-gray-300 transition-colors">
+                + Create opportunity
+              </button>
+              <div class="mt-auto pt-3 border-t border-gray-100 flex items-center space-x-1.5 text-xs text-gray-500 font-medium">
+                <span class="text-gray-400">◇</span>
+                <span class="font-mono font-semibold text-gray-700" id="sum-disc">$0.00</span>
+              </div>
+            </div>
+
+            <!-- STAGE 3: Proposal -->
+            <div class="kanban-col" data-stage="proposal">
+              <div class="flex items-center justify-between pb-3 mb-3 border-b border-gray-100">
+                <div class="flex items-center space-x-2">
+                  <span class="stage-ring stage-ring-prop"></span>
+                  <h3 class="text-xs font-semibold text-gray-800">Proposal</h3>
+                  <span class="text-[11px] font-medium px-1.5 py-0.2 rounded-full bg-gray-100 text-gray-500" id="count-prop">0</span>
+                </div>
+                <button onclick="openModalWithStage('proposal')" class="text-gray-400 hover:text-gray-700 text-sm font-semibold">+</button>
+              </div>
+              <div class="kanban-cards-container" id="cards-prop"></div>
+              <button onclick="openModalWithStage('proposal')" class="mt-2 mb-3 w-full py-2 border border-dashed border-gray-200 rounded-lg text-xs font-medium text-gray-400 hover:text-gray-700 hover:border-gray-300 transition-colors">
+                + Create opportunity
+              </button>
+              <div class="mt-auto pt-3 border-t border-gray-100 flex items-center space-x-1.5 text-xs text-gray-500 font-medium">
+                <span class="text-gray-400">◇</span>
+                <span class="font-mono font-semibold text-gray-700" id="sum-prop">$0.00</span>
+              </div>
+            </div>
+
+            <!-- STAGE 4: Negotiation -->
+            <div class="kanban-col" data-stage="negotiation">
+              <div class="flex items-center justify-between pb-3 mb-3 border-b border-gray-100">
+                <div class="flex items-center space-x-2">
+                  <span class="stage-ring stage-ring-nego"></span>
+                  <h3 class="text-xs font-semibold text-gray-800">Negotiation</h3>
+                  <span class="text-[11px] font-medium px-1.5 py-0.2 rounded-full bg-gray-100 text-gray-500" id="count-nego">0</span>
+                </div>
+                <button onclick="openModalWithStage('negotiation')" class="text-gray-400 hover:text-gray-700 text-sm font-semibold">+</button>
+              </div>
+              <div class="kanban-cards-container" id="cards-nego"></div>
+              <button onclick="openModalWithStage('negotiation')" class="mt-2 mb-3 w-full py-2 border border-dashed border-gray-200 rounded-lg text-xs font-medium text-gray-400 hover:text-gray-700 hover:border-gray-300 transition-colors">
+                + Create opportunity
+              </button>
+              <div class="mt-auto pt-3 border-t border-gray-100 flex items-center space-x-1.5 text-xs text-gray-500 font-medium">
+                <span class="text-gray-400">◇</span>
+                <span class="font-mono font-semibold text-gray-700" id="sum-nego">$0.00</span>
+              </div>
+            </div>
+
+            <!-- STAGE 5: Won -->
+            <div class="kanban-col" data-stage="won">
+              <div class="flex items-center justify-between pb-3 mb-3 border-b border-gray-100">
+                <div class="flex items-center space-x-2">
+                  <span class="stage-ring stage-ring-won">✓</span>
+                  <h3 class="text-xs font-semibold text-gray-800">Won</h3>
+                  <span class="text-[11px] font-medium px-1.5 py-0.2 rounded-full bg-gray-100 text-gray-500" id="count-won">0</span>
+                </div>
+                <button onclick="openModalWithStage('won')" class="text-gray-400 hover:text-gray-700 text-sm font-semibold">+</button>
+              </div>
+              <div class="kanban-cards-container" id="cards-won"></div>
+              <button onclick="openModalWithStage('won')" class="mt-2 mb-3 w-full py-2 border border-dashed border-gray-200 rounded-lg text-xs font-medium text-gray-400 hover:text-gray-700 hover:border-gray-300 transition-colors">
+                + Create opportunity
+              </button>
+              <div class="mt-auto pt-3 border-t border-gray-100 flex items-center space-x-1.5 text-xs text-gray-500 font-medium">
+                <span class="text-gray-400">◇</span>
+                <span class="font-mono font-semibold text-gray-700" id="sum-won">$0.00</span>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- VIEW 2: INVOICES LEDGER TABLE (Preserves #invoices-table & #invoices-tbody for Playwright) -->
+        <div id="view-table" class="hidden space-y-4">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-gray-200 gap-2">
+            <div>
+              <h2 class="text-base font-semibold text-gray-900">Accounts Payable Ledger</h2>
+              <p class="text-xs text-gray-500">Live invoices verified against system of record.</p>
+            </div>
+            <div class="flex items-center space-x-2">
+              <button onclick="fetchInvoices()" class="px-3 py-1.5 border border-gray-200 rounded-md text-xs font-semibold text-gray-700 hover:bg-gray-50 flex items-center gap-1 shadow-2xs">
+                <span>⟳</span> Refresh
+              </button>
+              <button onclick="openModal()" class="px-3 py-1.5 bg-gray-900 hover:bg-black text-white text-xs font-semibold rounded-md shadow-2xs flex items-center gap-1">
+                <span>+</span> Record Invoice
+              </button>
+            </div>
+          </div>
+
+          <div class="bg-white shadow-2xs overflow-hidden rounded-xl border border-gray-200">
+            <table class="min-w-full divide-y divide-gray-200" id="invoices-table">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">ID</th>
+                  <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Vendor</th>
+                  <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Invoice #</th>
+                  <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Amount</th>
+                  <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Due Date</th>
+                  <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
+                </tr>
+              </thead>
+              <tbody id="invoices-tbody" class="bg-white divide-y divide-gray-200">
+                <!-- Dynamically loaded rows -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </main>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- 4. FLOATING MODAL DIALOG                   -->
+  <!--    Preserves all Playwright element IDs    -->
+  <!-- ========================================== -->
+  <div id="invoice-modal" class="fixed inset-0 bg-black bg-opacity-30 hidden flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-2xl border border-gray-200 shadow-2xl w-full max-w-md overflow-hidden transform transition-all">
+      <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+        <h3 class="text-sm font-bold text-gray-900" id="modal-title">Record Opportunity & Invoice</h3>
+        <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600 text-lg font-bold">&times;</button>
+      </div>
+
+      <form id="invoice-form" onsubmit="submitInvoice(event)" class="p-6 space-y-4">
+        <div>
+          <label for="vendor-name-input" class="block text-xs font-semibold text-gray-700 mb-1">Company / Vendor Name</label>
+          <input type="text" id="vendor-name-input" required placeholder="Vendor or company name" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs text-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900">
+        </div>
+
+        <div>
+          <label for="invoice-number-input" class="block text-xs font-semibold text-gray-700 mb-1">Opportunity Code / Invoice #</label>
+          <input type="text" id="invoice-number-input" required placeholder="Invoice or reference number" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs font-mono text-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label for="amount-input" class="block text-xs font-semibold text-gray-700 mb-1">Value (USD)</label>
+            <input type="number" step="0.01" id="amount-input" required placeholder="0.00" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs font-mono text-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900">
+          </div>
+          <div>
+            <label for="due-date-input" class="block text-xs font-semibold text-gray-700 mb-1">Target Close Date</label>
+            <input type="date" id="due-date-input" required class="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs text-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900">
+          </div>
+        </div>
+
+        <div>
+          <label for="notes-input" class="block text-xs font-semibold text-gray-700 mb-1">Brief & Notes (Optional)</label>
+          <textarea id="notes-input" rows="2" placeholder="Notes or details (optional)" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-xs text-gray-900 focus:outline-none focus:ring-1 focus:ring-gray-900"></textarea>
+        </div>
+
+        <div class="pt-3 border-t border-gray-100 flex items-center justify-end space-x-2">
+          <button type="button" onclick="closeModal()" class="px-3 py-1.5 border border-gray-300 rounded-md text-xs font-medium text-gray-700 hover:bg-gray-50">Cancel</button>
+          <button type="submit" id="submit-invoice-btn" class="px-4 py-1.5 bg-gray-900 hover:bg-black text-white text-xs font-semibold rounded-md shadow-2xs transition-all active:scale-95">Save Record</button>
         </div>
       </form>
     </div>
   </div>
 
+  <!-- Opportunity Inspection Modal -->
+  <div id="card-inspection-modal" class="fixed inset-0 bg-black bg-opacity-30 hidden flex items-center justify-center z-50 p-4">
+    <div class="bg-white rounded-2xl border border-gray-200 shadow-2xl w-full max-w-md overflow-hidden transform transition-all">
+      <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+        <h3 id="inspect-title" class="text-sm font-bold text-gray-900 truncate max-w-xs">Opportunity Details</h3>
+        <button onclick="closeCardInspection()" class="text-gray-400 hover:text-gray-600 text-lg font-bold">&times;</button>
+      </div>
+
+      <div class="p-6 space-y-4 text-xs">
+        <div>
+          <span class="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">Account / Company</span>
+          <p id="inspect-company" class="text-sm font-semibold text-gray-900 mt-0.5"></p>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3 p-3 bg-gray-50 rounded-xl border border-gray-100">
+          <div>
+            <span class="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">Deal Value</span>
+            <p id="inspect-amount" class="text-sm font-bold font-mono text-gray-900 mt-0.5"></p>
+          </div>
+          <div>
+            <span class="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">Target Close Date</span>
+            <p id="inspect-date" class="text-sm font-medium text-gray-700 mt-0.5"></p>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between p-3 bg-white rounded-xl border border-gray-200">
+          <div>
+            <span class="text-[10px] text-gray-400 uppercase tracking-wider font-semibold">Deal Owner</span>
+            <div class="flex items-center gap-1.5 mt-1">
+              <span id="inspect-avatar" class="avatar-badge" style="width: 20px; height: 20px; font-size: 10px;">RG</span>
+              <span id="inspect-owner" class="text-xs font-semibold text-gray-900">Rishit Goel</span>
+            </div>
+          </div>
+          <div id="inspect-erp-badge" class="hidden">
+            <span class="text-[10px] font-medium text-stone-600 bg-stone-100 px-2 py-0.5 rounded border border-stone-200">ERP LIVE</span>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-[11px] font-semibold text-gray-500 uppercase tracking-wider mb-1">Move Pipeline Stage</label>
+          <div class="grid grid-cols-5 gap-1 pt-1" id="stage-move-buttons">
+            <button type="button" onclick="moveCurrentCard('qualification')" class="px-1 py-1.5 border border-gray-200 rounded text-[10px] font-medium text-gray-700 hover:bg-gray-50 text-center">Qual</button>
+            <button type="button" onclick="moveCurrentCard('discovery')" class="px-1 py-1.5 border border-gray-200 rounded text-[10px] font-medium text-gray-700 hover:bg-gray-50 text-center">Disc</button>
+            <button type="button" onclick="moveCurrentCard('proposal')" class="px-1 py-1.5 border border-gray-200 rounded text-[10px] font-medium text-gray-700 hover:bg-gray-50 text-center">Prop</button>
+            <button type="button" onclick="moveCurrentCard('negotiation')" class="px-1 py-1.5 border border-gray-200 rounded text-[10px] font-medium text-gray-700 hover:bg-gray-50 text-center">Nego</button>
+            <button type="button" onclick="moveCurrentCard('won')" class="px-1 py-1.5 border border-gray-200 rounded text-[10px] font-medium text-gray-700 hover:bg-gray-50 text-center">Won</button>
+          </div>
+        </div>
+
+        <div class="pt-3 border-t border-gray-100 flex items-center justify-end space-x-2">
+          <button onclick="closeCardInspection()" class="px-4 py-1.5 bg-gray-900 hover:bg-black text-white text-xs font-semibold rounded-md shadow-2xs">
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- 5. APPLICATION JAVASCRIPT CONTROLLER       -->
+  <!-- ========================================== -->
   <script>
-    async function fetchInvoices() {
-      try {
-        const res = await fetch('/invoices');
-        const invoices = await res.json();
-        const tbody = document.getElementById('invoices-tbody');
-        tbody.innerHTML = '';
-        invoices.forEach(inv => {
-          const tr = document.createElement('tr');
-          tr.setAttribute('data-invoice-id', inv.id);
-          tr.className = 'hover:bg-gray-50';
-          tr.innerHTML = `
-            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">#${inv.id}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-semibold">${inv.vendor_name}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-mono">${inv.invoice_number}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900">$${Number(inv.amount).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">${inv.due_date}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-sm">
-              <span class="px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">${inv.status}</span>
-            </td>
-          `;
-          tbody.appendChild(tr);
-        });
-      } catch (e) {
-        console.error('Error fetching invoices', e);
+    // Seeded Opportunities Pipeline
+    const SEEDED_OPPORTUNITIES = [
+      {
+        id: 'seed-1',
+        title: 'Lumenfield — Data residency (EU)',
+        company: 'Lumenfield',
+        amount: 38000,
+        due_date: 'Feb 1, 2027',
+        owner: 'Rishit Goel',
+        owner_initials: 'RG',
+        stage: 'qualification'
+      },
+      {
+        id: 'seed-2',
+        title: 'Pinegrove — District licenses',
+        company: 'Pinegrove Education',
+        amount: 34000,
+        due_date: 'Jan 17, 2027',
+        owner: 'Rishit Goel',
+        owner_initials: 'RG',
+        stage: 'qualification'
+      },
+      {
+        id: 'seed-3',
+        title: 'Tidewater — Compliance add-on',
+        company: 'Tidewater Finance',
+        amount: 27000,
+        due_date: 'Dec 20, 2026',
+        owner: 'Rishit Goel',
+        owner_initials: 'RG',
+        stage: 'qualification'
+      },
+      {
+        id: 'seed-4',
+        title: 'Halcyon — Clinic network pilot',
+        company: 'Halcyon Health',
+        amount: 64000,
+        due_date: 'Dec 7, 2026',
+        owner: 'Rishit Goel',
+        owner_initials: 'RG',
+        stage: 'discovery'
+      },
+      {
+        id: 'seed-5',
+        title: 'Kestrel — SOC tooling',
+        company: 'Kestrel Security',
+        amount: 58000,
+        due_date: 'Nov 23, 2026',
+        owner: 'CentrAlign Agent',
+        owner_initials: 'CA',
+        stage: 'discovery'
+      },
+      {
+        id: 'seed-6',
+        title: 'Meridian — Payroll sync',
+        company: 'Meridian Payroll',
+        amount: 46000,
+        due_date: 'Nov 30, 2026',
+        owner: 'Rishit Goel',
+        owner_initials: 'RG',
+        stage: 'discovery'
+      },
+      {
+        id: 'seed-7',
+        title: 'Brightpath — Fleet analytics rollout',
+        company: 'Brightpath Logistics',
+        amount: 96000,
+        due_date: 'Nov 16, 2026',
+        owner: 'CentrAlign Agent',
+        owner_initials: 'CA',
+        stage: 'proposal'
+      },
+      {
+        id: 'seed-8',
+        title: 'Orbitline — Usage-based expansion',
+        company: 'Orbitline',
+        amount: 72500,
+        due_date: 'Nov 5, 2026',
+        owner: 'CentrAlign Agent',
+        owner_initials: 'CA',
+        stage: 'proposal'
+      },
+      {
+        id: 'seed-9',
+        title: 'Vantage — Route optimization',
+        company: 'Vantage Freight',
+        amount: 124000,
+        due_date: 'Nov 12, 2026',
+        owner: 'Rishit Goel',
+        owner_initials: 'RG',
+        stage: 'proposal'
+      },
+      {
+        id: 'seed-10',
+        title: 'Cedarstone — Omnichannel suite',
+        company: 'Cedarstone Retail',
+        amount: 215000,
+        due_date: 'Nov 1, 2026',
+        owner: 'Rishit Goel',
+        owner_initials: 'RG',
+        stage: 'negotiation'
+      },
+      {
+        id: 'seed-11',
+        title: 'Lumenfield — Enterprise platform',
+        company: 'Lumenfield',
+        amount: 148000,
+        due_date: 'Oct 26, 2026',
+        owner: 'Rishit Goel',
+        owner_initials: 'RG',
+        stage: 'negotiation'
+      },
+      {
+        id: 'seed-12',
+        title: 'Northbeam — Starter annual',
+        company: 'Northbeam Studio',
+        amount: 9600,
+        due_date: 'Sep 17, 2026',
+        owner: 'Rishit Goel',
+        owner_initials: 'RG',
+        stage: 'won'
+      },
+      {
+        id: 'seed-13',
+        title: 'Quarry Labs — Team plan',
+        company: 'Quarry Labs',
+        amount: 18500,
+        due_date: 'Sep 24, 2026',
+        owner: 'CentrAlign Agent',
+        owner_initials: 'CA',
+        stage: 'won'
+      }
+    ];
+
+    let dynamicCards = [...SEEDED_OPPORTUNITIES];
+    let liveInvoices = [];
+    let currentFilterMinAmount = 0;
+    let currentActiveStageForModal = 'qualification';
+
+    // Sidebar state & localStorage persistence
+    function initSidebar() {
+      const isCollapsed = localStorage.getItem('sidebar_collapsed') === 'true';
+      if (isCollapsed) {
+        document.getElementById('app-sidebar').classList.add('collapsed');
       }
     }
 
+    function toggleSidebar() {
+      const sidebar = document.getElementById('app-sidebar');
+      sidebar.classList.toggle('collapsed');
+      localStorage.setItem('sidebar_collapsed', sidebar.classList.contains('collapsed'));
+    }
+
+    function toggleSidebarSearch() {
+      const input = document.getElementById('live-search-input');
+      if (input) input.focus();
+    }
+
+    function toggleAccountMenu() {
+      const menu = document.getElementById('account-menu');
+      menu.classList.toggle('hidden');
+    }
+
+    function toggleFilterMenu() {
+      const menu = document.getElementById('filter-menu');
+      menu.classList.toggle('hidden');
+    }
+
+    function toggleDisplayMenu() {
+      const menu = document.getElementById('display-menu');
+      menu.classList.toggle('hidden');
+    }
+
+    function setMinAmount(val) {
+      currentFilterMinAmount = val;
+      document.querySelectorAll('.filter-pill').forEach(btn => {
+        btn.classList.toggle('active-pill', parseInt(btn.dataset.amount, 10) === val);
+      });
+      applyFilters();
+    }
+
+    function resetFilters() {
+      document.getElementById('filter-stage').value = 'all';
+      document.getElementById('filter-owner').value = 'all';
+      currentFilterMinAmount = 0;
+      setMinAmount(0);
+      document.getElementById('filter-active-dot').classList.add('hidden');
+      renderKanbanBoard();
+    }
+
+    function applyFilters() {
+      const stage = document.getElementById('filter-stage').value;
+      const owner = document.getElementById('filter-owner').value;
+      const dot = document.getElementById('filter-active-dot');
+
+      const isFiltered = stage !== 'all' || owner !== 'all' || currentFilterMinAmount > 0;
+      if (dot) dot.classList.toggle('hidden', !isFiltered);
+
+      renderKanbanBoard();
+    }
+
+    function filterAllRecords() {
+      renderKanbanBoard();
+    }
+
+    // Render Kanban Pipeline
+    function renderKanbanBoard() {
+      const searchQ = (document.getElementById('live-search-input')?.value || '').toLowerCase().trim();
+      const filterStage = document.getElementById('filter-stage')?.value || 'all';
+      const filterOwner = document.getElementById('filter-owner')?.value || 'all';
+
+      const stages = ['qualification', 'discovery', 'proposal', 'negotiation', 'won'];
+      const stageMap = {
+        qualification: { container: 'cards-qual', countEl: 'count-qual', sumEl: 'sum-qual', items: [], total: 0 },
+        discovery: { container: 'cards-disc', countEl: 'count-disc', sumEl: 'sum-disc', items: [], total: 0 },
+        proposal: { container: 'cards-prop', countEl: 'count-prop', sumEl: 'sum-prop', items: [], total: 0 },
+        negotiation: { container: 'cards-nego', countEl: 'count-nego', sumEl: 'sum-nego', items: [], total: 0 },
+        won: { container: 'cards-won', countEl: 'count-won', sumEl: 'sum-won', items: [], total: 0 }
+      };
+
+      const allMergedCards = [...dynamicCards];
+      liveInvoices.forEach(inv => {
+        const existing = allMergedCards.find(c => c.id === `erp-${inv.id}`);
+        if (!existing) {
+          allMergedCards.push({
+            id: `erp-${inv.id}`,
+            title: `${inv.vendor_name} — Invoice #${inv.invoice_number}`,
+            company: inv.vendor_name,
+            amount: parseFloat(inv.amount || 0),
+            due_date: inv.due_date || '—',
+            owner: 'CentrAlign Agent',
+            owner_initials: 'CA',
+            stage: inv.status === 'approved' || inv.status === 'settled' ? 'won' : 'qualification',
+            isLiveErp: true
+          });
+        }
+      });
+
+      // Filter
+      allMergedCards.forEach(item => {
+        if (filterStage !== 'all' && item.stage !== filterStage) return;
+        if (filterOwner !== 'all' && item.owner !== filterOwner) return;
+        if (currentFilterMinAmount > 0 && item.amount < currentFilterMinAmount) return;
+        if (searchQ) {
+          const matchTitle = item.title.toLowerCase().includes(searchQ);
+          const matchCompany = item.company.toLowerCase().includes(searchQ);
+          const matchOwner = item.owner.toLowerCase().includes(searchQ);
+          if (!matchTitle && !matchCompany && !matchOwner) return;
+        }
+        if (stageMap[item.stage]) {
+          stageMap[item.stage].items.push(item);
+          stageMap[item.stage].total += item.amount;
+        }
+      });
+
+      // Render into DOM
+      stages.forEach(st => {
+        const config = stageMap[st];
+        const container = document.getElementById(config.container);
+        const countBadge = document.getElementById(config.countEl);
+        const sumEl = document.getElementById(config.sumEl);
+
+        if (countBadge) countBadge.innerText = config.items.length;
+        if (sumEl) sumEl.innerText = '$' + config.total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+        if (container) {
+          container.innerHTML = config.items.map(card => `
+            <div class="opportunity-card" id="deal-card-${card.id}" onclick="inspectCard('${card.id}')">
+              <h4 class="card-title">${escapeHtml(card.title)}</h4>
+              <div class="card-row">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>
+                <span>${escapeHtml(card.company)}</span>
+              </div>
+              <div class="card-row font-mono font-semibold text-gray-900">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 2l8 10-8 10-8-10 8-10z"/></svg>
+                <span>$${Number(card.amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+              </div>
+              <div class="card-row">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                <span>${escapeHtml(card.due_date)}</span>
+              </div>
+              <div class="card-row pt-1 mt-2 border-t border-gray-100 flex items-center justify-between">
+                <div class="flex items-center gap-1.5">
+                  <span class="avatar-badge" style="width: 18px; height: 18px; font-size: 9px;">${escapeHtml(card.owner_initials)}</span>
+                  <span class="text-xs text-gray-700">${escapeHtml(card.owner)}</span>
+                </div>
+                ${card.isLiveErp ? '<span class="text-[9px] font-medium text-stone-600 bg-stone-100 px-1 py-0.5 rounded border border-stone-200">ERP LIVE</span>' : ''}
+              </div>
+            </div>
+          `).join('');
+        }
+      });
+    }
+
+    // Fetch live ERP records & render into table
+    async function fetchInvoices() {
+      try {
+        const res = await fetch('/invoices');
+        if (res.ok) {
+          liveInvoices = await res.json();
+          renderInvoicesTable(liveInvoices);
+          renderKanbanBoard();
+        }
+      } catch (err) {
+        console.error("Failed to fetch invoices:", err);
+      }
+    }
+
+    function renderInvoicesTable(invoices) {
+      const tbody = document.getElementById('invoices-tbody');
+      if (!tbody) return;
+      tbody.innerHTML = '';
+
+      if (!invoices || invoices.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-6 text-center text-xs text-gray-400 italic">No invoices recorded in company ERP yet.</td></tr>';
+        return;
+      }
+
+      invoices.forEach(inv => {
+        const tr = document.createElement('tr');
+        tr.setAttribute('data-invoice-id', inv.id);
+        tr.className = 'hover:bg-gray-50';
+        
+        let statusBadge = '<span class="px-2 py-0.5 rounded text-[11px] font-medium bg-stone-100 text-stone-600 border border-stone-200">' + escapeHtml(inv.status) + '</span>';
+        if (inv.status === 'approved' || inv.status === 'settled' || inv.status === 'verified') {
+          statusBadge = '<span class="px-2 py-0.5 rounded text-[11px] font-medium bg-[#f2f7f4] text-[#2f523e] border border-[#d5e5db]">' + escapeHtml(inv.status) + '</span>';
+        } else if (inv.status === 'escalated') {
+          statusBadge = '<span class="px-2 py-0.5 rounded text-[11px] font-medium bg-[#faf4f4] text-[#5c3535] border border-[#eddcdc]">' + escapeHtml(inv.status) + '</span>';
+        }
+
+        tr.innerHTML = `
+          <td class="px-6 py-4 whitespace-nowrap text-xs font-mono font-medium text-gray-900">#${inv.id}</td>
+          <td class="px-6 py-4 whitespace-nowrap text-xs text-gray-900 font-semibold">${escapeHtml(inv.vendor_name)}</td>
+          <td class="px-6 py-4 whitespace-nowrap text-xs text-gray-500 font-mono">${escapeHtml(inv.invoice_number)}</td>
+          <td class="px-6 py-4 whitespace-nowrap text-xs font-mono font-bold text-gray-900">$${Number(inv.amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+          <td class="px-6 py-4 whitespace-nowrap text-xs text-gray-500">${escapeHtml(inv.due_date)}</td>
+          <td class="px-6 py-4 whitespace-nowrap text-xs">
+            ${statusBadge}
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    // Modal controls (Strictly preserves Playwright contract)
     function openModal() {
       document.getElementById('invoice-modal').classList.remove('hidden');
+      document.getElementById('due-date-input').value = new Date().toISOString().split('T')[0];
+    }
+
+    function openModalWithStage(stage) {
+      currentActiveStageForModal = stage;
+      const titleEl = document.getElementById('modal-title');
+      if (titleEl) {
+        titleEl.textContent = `Record Opportunity (${stage.charAt(0).toUpperCase() + stage.slice(1)})`;
+      }
+      openModal();
     }
 
     function closeModal() {
       document.getElementById('invoice-modal').classList.add('hidden');
       document.getElementById('invoice-form').reset();
+      const titleEl = document.getElementById('modal-title');
+      if (titleEl) {
+        titleEl.textContent = 'Record Opportunity & Invoice';
+      }
     }
 
+    // Toast Notifications (Strictly preserves Playwright contract with toned down colors)
     function showToast(message, isSuccess = true) {
       const banner = document.getElementById('toast-banner');
       const msg = document.getElementById('toast-message');
+      const icon = document.getElementById('toast-icon');
       msg.textContent = message;
-      banner.className = `mb-6 p-4 rounded-md border text-sm flex items-center justify-between ${
-        isSuccess ? 'bg-green-50 border-green-200 text-green-800' : 'bg-red-50 border-red-200 text-red-800'
+      icon.textContent = isSuccess ? '✓' : '⚠';
+      banner.className = `mx-6 mt-3 p-3 rounded-lg border text-xs flex items-center justify-between shadow-2xs transition-all duration-200 ${
+        isSuccess ? 'bg-[#f6f9f7] border-[#d8e3dc] text-[#284738]' : 'bg-[#faf6f6] border-[#e8dada] text-[#5c3333]'
       }`;
       banner.classList.remove('hidden');
     }
@@ -178,6 +963,7 @@
       document.getElementById('toast-banner').classList.add('hidden');
     }
 
+    // Form Submission (Strictly preserves Playwright contract)
     async function submitInvoice(e) {
       e.preventDefault();
       const payload = {
@@ -211,76 +997,140 @@
       }
     }
 
-    async function fetchPendingApprovals() {
-      try {
-        const res = await fetch('/api/hitl/tasks');
-        const tasks = await res.json();
-        const badge = document.getElementById('hitl-count-badge');
-        const container = document.getElementById('hitl-queue-container');
-        badge.textContent = `${tasks.length} Pending`;
+    // View Switcher (Kanban vs Table)
+    function switchView(viewName) {
+      const isKanban = viewName === 'kanban';
+      document.getElementById('view-kanban').classList.toggle('hidden', !isKanban);
+      document.getElementById('view-table').classList.toggle('hidden', isKanban);
+      document.getElementById('check-kanban').classList.toggle('hidden', !isKanban);
+      document.getElementById('check-table').classList.toggle('hidden', isKanban);
 
-        if (tasks.length === 0) {
-          container.innerHTML = '<p class="text-sm text-gray-400 italic">No tasks currently awaiting approval.</p>';
-          return;
-        }
+      document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+      const activeNav = document.getElementById(isKanban ? 'nav-opportunities' : 'nav-accounts');
+      if (activeNav) activeNav.classList.add('active');
 
-        container.innerHTML = '';
-        tasks.forEach(t => {
-          const card = document.createElement('div');
-          card.className = 'border border-yellow-200 bg-yellow-50 rounded-lg p-5 shadow-sm';
-          card.innerHTML = `
-            <div class="flex justify-between items-start">
-              <div>
-                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-yellow-200 text-yellow-900 uppercase">
-                  ${t.escalation.reason}
-                </span>
-                <h4 class="text-base font-bold text-gray-900 mt-2">${t.escalation.question}</h4>
-                <p class="text-xs text-gray-500 mt-1 font-mono">Task ID: ${t.task_id} &bull; Suspended At: ${t.suspended_at}</p>
-                <div class="mt-3 text-sm text-gray-700 bg-white p-3 rounded border border-yellow-100">
-                  <p><strong>Vendor:</strong> ${t.escalation.context.vendor_name || 'N/A'}</p>
-                  <p><strong>Amount:</strong> $${Number(t.escalation.context.amount || 0).toLocaleString()}</p>
-                  <p><strong>Invoice Code:</strong> ${t.escalation.context.invoice_number || 'N/A'}</p>
-                  <p class="text-xs text-red-600 mt-1">Exceeds autonomous spending threshold of $${Number(t.escalation.context.threshold || 10000).toLocaleString()}</p>
-                </div>
-              </div>
-              <div class="flex flex-col space-y-2 ml-4">
-                <button onclick="resolveApproval('${t.task_id}', true)" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-xs font-bold rounded shadow-sm">
-                  ✓ Approve Action
-                </button>
-                <button onclick="resolveApproval('${t.task_id}', false)" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded shadow-sm">
-                  ✕ Reject Task
-                </button>
-              </div>
-            </div>
-          `;
-          container.appendChild(card);
-        });
-      } catch (err) {
-        console.error('Error fetching approvals', err);
-      }
+      const titleEl = document.getElementById('page-title');
+      if (titleEl) titleEl.textContent = isKanban ? 'Opportunities' : 'Invoices Ledger';
+
+      document.getElementById('display-menu').classList.add('hidden');
     }
 
-    async function resolveApproval(taskId, approved) {
-      try {
-        const res = await fetch(`/api/hitl/tasks/${taskId}/resolve`, {
-          method: 'POST',
-          headers: {'Content-Type': 'application/json'},
-          body: JSON.stringify({approved: approved, notes: `Reviewed by operator via web portal.`})
-        });
-        if (res.ok) {
-          showToast(`Task ${taskId} decision recorded: ${approved ? 'APPROVED' : 'REJECTED'}. Agent will resume.`, true);
-          await fetchPendingApprovals();
-          await fetchInvoices();
+    let currentInspectedCard = null;
+
+    function inspectCard(cardId) {
+      let found = SEEDED_OPPORTUNITIES.find(c => c.id === cardId);
+      if (!found && cardId.startsWith('erp-')) {
+        const erpId = parseInt(cardId.replace('erp-', ''), 10);
+        const inv = liveInvoices.find(i => i.id === erpId);
+        if (inv) {
+          found = {
+            id: cardId,
+            title: `${inv.vendor_name} — Invoice #${inv.invoice_number}`,
+            company: inv.vendor_name,
+            amount: parseFloat(inv.amount || 0),
+            due_date: inv.due_date || '—',
+            owner: 'CentrAlign Agent',
+            owner_initials: 'CA',
+            stage: inv.status === 'approved' || inv.status === 'settled' ? 'won' : 'qualification',
+            isLiveErp: true
+          };
         }
-      } catch (e) {
-        showToast(`Failed to resolve approval: ${e.message}`, false);
+      } else if (!found) {
+        found = dynamicCards.find(c => c.id === cardId);
       }
+
+      if (!found) return;
+      currentInspectedCard = found;
+
+      document.getElementById('inspect-title').textContent = found.title;
+      document.getElementById('inspect-company').textContent = found.company;
+      document.getElementById('inspect-amount').textContent = '$' + Number(found.amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+      document.getElementById('inspect-date').textContent = found.due_date;
+      document.getElementById('inspect-owner').textContent = found.owner;
+      document.getElementById('inspect-avatar').textContent = found.owner_initials;
+
+      const erpBadge = document.getElementById('inspect-erp-badge');
+      if (erpBadge) erpBadge.classList.toggle('hidden', !found.isLiveErp);
+
+      document.getElementById('card-inspection-modal').classList.remove('hidden');
     }
 
-    window.addEventListener('DOMContentLoaded', () => {
-      fetchInvoices();
-      fetchPendingApprovals();
+    function closeCardInspection() {
+      document.getElementById('card-inspection-modal').classList.add('hidden');
+      currentInspectedCard = null;
+    }
+
+    function moveCurrentCard(newStage) {
+      if (!currentInspectedCard) return;
+      currentInspectedCard.stage = newStage;
+
+      const seedIdx = dynamicCards.findIndex(c => c.id === currentInspectedCard.id);
+      if (seedIdx !== -1) {
+        dynamicCards[seedIdx].stage = newStage;
+      }
+
+      renderKanbanBoard();
+      closeCardInspection();
+      showToast(`Moved "${currentInspectedCard.company}" to ${newStage.charAt(0).toUpperCase() + newStage.slice(1)}`, true);
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str).replace(/[&<>"']/g, function(m) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[m];
+      });
+    }
+
+    // Global keyboard listener
+    window.addEventListener('keydown', (e) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        const searchInput = document.getElementById('live-search-input');
+        if (searchInput) {
+          searchInput.focus();
+          searchInput.select();
+        }
+      }
+      if (e.key === 'Escape') {
+        closeModal();
+        closeCardInspection();
+        document.getElementById('filter-menu')?.classList.add('hidden');
+        document.getElementById('display-menu')?.classList.add('hidden');
+        document.getElementById('account-menu')?.classList.add('hidden');
+      }
     });
+
+    // Dismiss popovers on outside click
+    document.addEventListener('click', (e) => {
+      const filterMenu = document.getElementById('filter-menu');
+      const filterTrigger = document.getElementById('filter-menu-trigger');
+      if (filterMenu && !filterMenu.classList.contains('hidden')) {
+        if (!filterMenu.contains(e.target) && !filterTrigger.contains(e.target)) {
+          filterMenu.classList.add('hidden');
+        }
+      }
+
+      const displayMenu = document.getElementById('display-menu');
+      const displayTrigger = document.getElementById('display-menu-trigger');
+      if (displayMenu && !displayMenu.classList.contains('hidden')) {
+        if (!displayMenu.contains(e.target) && !displayTrigger.contains(e.target)) {
+          displayMenu.classList.add('hidden');
+        }
+      }
+
+      const accountMenu = document.getElementById('account-menu');
+      const accountTrigger = document.getElementById('account-menu-trigger');
+      if (accountMenu && !accountMenu.classList.contains('hidden')) {
+        if (!accountMenu.contains(e.target) && !accountTrigger.contains(e.target)) {
+          accountMenu.classList.add('hidden');
+        }
+      }
+    });
+
+    // Initialize application
+    initSidebar();
+    renderKanbanBoard();
+    fetchInvoices();
   </script>
 </body>
 </html>
