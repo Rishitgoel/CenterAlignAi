@@ -307,13 +307,17 @@ class BrowserOperatorTool(Tool):
             if (filters.min_amount !== undefined && typeof setAmountFilter === 'function') {
                 setAmountFilter(filters.min_amount);
             }
-            if (filters.stage && document.getElementById('stage-filter')) {
-                document.getElementById('stage-filter').value = filters.stage;
-                if (typeof filterOpportunities === 'function') filterOpportunities();
+            const stageEl = document.getElementById('filter-stage') || document.getElementById('stage-filter');
+            if (filters.stage && stageEl) {
+                stageEl.value = filters.stage;
+                if (typeof applyFilters === 'function') applyFilters();
+                else if (typeof filterOpportunities === 'function') filterOpportunities();
             }
-            if (filters.search && document.getElementById('search-input')) {
-                document.getElementById('search-input').value = filters.search;
-                if (typeof filterOpportunities === 'function') filterOpportunities();
+            const searchEl = document.getElementById('live-search-input') || document.getElementById('search-input');
+            if (filters.search && searchEl) {
+                searchEl.value = filters.search;
+                if (typeof applyFilters === 'function') applyFilters();
+                else if (typeof filterOpportunities === 'function') filterOpportunities();
             }
             return { applied: true };
         }

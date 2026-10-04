@@ -1286,36 +1286,33 @@
     }
 
     function setMinAmount(val) {
-      currentFilterMinAmount = val;
+      currentFilterMinAmount = Number(val) || 0;
       document.querySelectorAll('.filter-pill').forEach(btn => {
-        btn.classList.toggle('active-pill', parseInt(btn.dataset.amount, 10) === val);
+        btn.classList.toggle('active-pill', parseInt(btn.dataset.amount, 10) === currentFilterMinAmount);
       });
       applyFilters();
     }
 
-    function resetFilters() {
-      document.getElementById('filter-stage').value = 'all';
-      document.getElementById('filter-owner').value = 'all';
-      currentFilterMinAmount = 0;
-      setMinAmount(0);
-      document.getElementById('filter-active-dot').classList.add('hidden');
-      renderKanbanBoard();
+    function setAmountFilter(val) {
+      setMinAmount(val);
     }
+    window.setMinAmount = setMinAmount;
+    window.setAmountFilter = setAmountFilter;
 
     function applyFilters() {
-      const stage = document.getElementById('filter-stage').value;
-      const owner = document.getElementById('filter-owner').value;
+      const stage = document.getElementById('filter-stage')?.value || 'all';
+      const owner = document.getElementById('filter-owner')?.value || 'all';
       const dot = document.getElementById('filter-active-dot');
 
       const isFiltered = stage !== 'all' || owner !== 'all' || currentFilterMinAmount > 0;
       if (dot) dot.classList.toggle('hidden', !isFiltered);
 
       renderKanbanBoard();
+      renderInvoicesTable(liveInvoices);
     }
-
-    function filterAllRecords() {
-      renderKanbanBoard();
-    }
+    window.applyFilters = applyFilters;
+    window.filterOpportunities = applyFilters;
+    window.filterAllRecords = applyFilters;
 
     function resetFilters() {
       const searchEl = document.getElementById('live-search-input');
@@ -1325,10 +1322,14 @@
       const ownerEl = document.getElementById('filter-owner');
       if (ownerEl) ownerEl.value = 'all';
       currentFilterMinAmount = 0;
+      document.querySelectorAll('.filter-pill').forEach(btn => {
+        btn.classList.toggle('active-pill', parseInt(btn.dataset.amount, 10) === 0);
+      });
       const dot = document.getElementById('filter-active-dot');
       if (dot) dot.classList.add('hidden');
-      renderKanbanBoard();
+      applyFilters();
     }
+    window.resetFilters = resetFilters;
 
     // Render Kanban Pipeline
     function renderKanbanBoard() {
@@ -1478,12 +1479,26 @@
       if (!tbody) return;
       tbody.innerHTML = '';
 
-      if (!invoices || invoices.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-6 text-center text-xs text-gray-400 italic">No invoices recorded in company ERP yet.</td></tr>';
+      const searchQ = (document.getElementById('live-search-input')?.value || '').toLowerCase().trim();
+
+      let filtered = invoices || [];
+      if (currentFilterMinAmount > 0) {
+        filtered = filtered.filter(inv => Number(inv.amount || 0) >= currentFilterMinAmount);
+      }
+      if (searchQ) {
+        filtered = filtered.filter(inv => 
+          (inv.vendor_name && inv.vendor_name.toLowerCase().includes(searchQ)) ||
+          (inv.invoice_number && inv.invoice_number.toLowerCase().includes(searchQ)) ||
+          (String(inv.id) === searchQ || `#${inv.id}` === searchQ)
+        );
+      }
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-6 text-center text-xs text-gray-400 italic">No invoices match the current filter criteria.</td></tr>';
         return;
       }
 
-      invoices.forEach(inv => {
+      filtered.forEach(inv => {
         const tr = document.createElement('tr');
         tr.setAttribute('data-invoice-id', inv.id);
         const isNew = newlyAddedInvoiceIds.has(inv.id);
@@ -2111,12 +2126,17 @@
       submitWorkerTask(taskText, attachedUploadPath);
     }
 
-    function handleCommandBarSubmit(e) {
+    async function handleCommandBarSubmit(e) {
       if (e) e.preventDefault();
       const inputEl = document.getElementById('ai-command-input');
       const text = (inputEl?.value || '').trim();
       if (!text) return;
-      executeAiSoftwareCommand(text, attachedUploadPath);
+      try {
+        await executeAiSoftwareCommand(text, attachedUploadPath);
+      } catch (err) {
+        console.error('AI command execution failed:', err);
+        showToast(`AI execution error: ${err.message}`, false);
+      }
     }
 
     async function handleFileSelect(e) {
@@ -2382,19 +2402,22 @@
       }
 
       // 3. Filters & Searching
-      if (/(?:clear|reset)\s+(?:all\s+)?filters?|show\s+all\s+(?:deals|records|pipeline)/i.test(q)) {
+      if (/(?:clear|reset)\s+(?:all\s+)?filters?|show\s+all\s+(?:deals|records|pipeline|invoices)/i.test(q)) {
         resetFilters();
-        showToast('✦ AI Controller: Reset all pipeline filters', true);
+        showToast('✦ AI Controller: Reset all pipeline and ledger filters', true);
         const inputEl = document.getElementById('ai-command-input');
         if (inputEl) inputEl.value = '';
         return;
       }
-      const filterAmtMatch = q.match(/(?:filter\s+(?:deals\s+)?)?(?:over|greater\s+than|>|\$)\s*([0-9]+(?:k|000)?)/i);
-      if (filterAmtMatch && (lower.includes('over') || lower.includes('greater') || lower.includes('filter'))) {
-        const rawAmt = filterAmtMatch[1].toLowerCase();
+      const filterAmtMatch = q.match(/(?:filter\s+(?:deals\s+|invoices\s+|records\s+)?)?(?:over|greater\s+(?:than\s+)?|>|\$|above|at\s+least|min(?:imum)?)\s*([0-9]+(?:\.[0-9]+)?(?:k|000)?)/i)
+        || q.match(/(?:filter\s+(?:deals\s+|invoices\s+|records\s+)?)\s*([0-9]+(?:\.[0-9]+)?(?:k|000)?)\+?/i)
+        || q.match(/(?:deals|invoices|records)\s*(?:>\s*|over\s+|greater\s+than\s+)\s*([0-9]+(?:\.[0-9]+)?(?:k|000)?)/i);
+
+      if (filterAmtMatch) {
+        const rawAmt = filterAmtMatch[1].toLowerCase().replace('$', '');
         const numAmt = rawAmt.endsWith('k') ? parseFloat(rawAmt.replace('k', '')) * 1000 : parseFloat(rawAmt);
         setAmountFilter(numAmt);
-        showToast(`✦ AI Controller: Filtered deals with minimum value $${numAmt.toLocaleString()}`, true);
+        showToast(`✦ AI Controller: Filtered records with minimum value $${numAmt.toLocaleString()}`, true);
         const inputEl = document.getElementById('ai-command-input');
         if (inputEl) inputEl.value = '';
         return;

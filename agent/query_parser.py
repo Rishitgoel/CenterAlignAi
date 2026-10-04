@@ -254,11 +254,13 @@ class AIQueryParser:
             )
 
         # Check CRM filters
-        if "filter" in task_lower or "deals over" in task_lower or "deals greater" in task_lower:
+        if "filter" in task_lower or "deals over" in task_lower or "deals greater" in task_lower or re.search(r"^[><]\s*[0-9]+", task_lower):
             min_amt = None
-            m_amt = re.search(r"(?:over|greater\s+than|>|\$)\s*([0-9]+(?:k|000)?)", query, re.IGNORECASE)
+            m_amt = re.search(r"(?:over|greater\s+than|>|\$|above|at\s+least)\s*([0-9]+(?:\.[0-9]+)?(?:k|000)?)", query, re.IGNORECASE)
+            if not m_amt:
+                m_amt = re.search(r"([0-9]+(?:\.[0-9]+)?(?:k|000)?)\+?", query)
             if m_amt:
-                raw_amt = m_amt.group(1).lower()
+                raw_amt = m_amt.group(1).lower().replace("$", "")
                 min_amt = float(raw_amt.replace("k", "")) * 1000 if "k" in raw_amt else float(raw_amt)
             stage_filter = None
             for st in ["qualification", "discovery", "proposal", "negotiation", "won"]:

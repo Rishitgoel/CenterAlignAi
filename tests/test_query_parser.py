@@ -97,6 +97,14 @@ def test_query_parser_crm_filter():
     assert parsed.action == "filter_crm"
     assert parsed.amount == 50000.0
 
+    parsed_gt = parser.parse_deterministic("filter >50k")
+    assert parsed_gt.action == "filter_crm"
+    assert parsed_gt.amount == 50000.0
+
+    parsed_standalone = parser.parse_deterministic(">50k")
+    assert parsed_standalone.action == "filter_crm"
+    assert parsed_standalone.amount == 50000.0
+
 
 def test_query_parser_invoice_approval_and_deletion():
     parser = AIQueryParser(api_key=None)
