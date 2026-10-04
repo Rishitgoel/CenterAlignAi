@@ -46,7 +46,7 @@
     </div>
 
     <!-- Invoices Table -->
-    <div class="bg-white shadow overflow-hidden sm:rounded-lg border border-gray-200">
+    <div class="bg-white shadow overflow-hidden sm:rounded-lg border border-gray-200 mb-10">
       <table class="min-w-full divide-y divide-gray-200" id="invoices-table">
         <thead class="bg-gray-50">
           <tr>
@@ -62,6 +62,25 @@
           <!-- Loaded dynamically -->
         </tbody>
       </table>
+    </div>
+
+    <!-- Human-in-the-Loop Governance Section -->
+    <div class="border-t border-gray-200 pt-8">
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <h3 class="text-xl font-bold text-gray-900 flex items-center space-x-2">
+            <span>🛡️ Autonomous Human-in-the-Loop Approval Queue</span>
+            <span id="hitl-count-badge" class="ml-2 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-red-100 text-red-800">0 Pending</span>
+          </h3>
+          <p class="text-sm text-gray-500">High-stakes policy escalations awaiting human operator review</p>
+        </div>
+        <button onclick="fetchPendingApprovals()" class="text-sm text-indigo-600 hover:text-indigo-800 font-medium">↻ Refresh Queue</button>
+      </div>
+
+      <div id="hitl-queue-container" class="space-y-4">
+        <!-- Rendered dynamically -->
+        <p class="text-sm text-gray-400 italic">No tasks currently awaiting approval.</p>
+      </div>
     </div>
   </main>
 
@@ -192,7 +211,76 @@
       }
     }
 
-    window.addEventListener('DOMContentLoaded', fetchInvoices);
+    async function fetchPendingApprovals() {
+      try {
+        const res = await fetch('/api/hitl/tasks');
+        const tasks = await res.json();
+        const badge = document.getElementById('hitl-count-badge');
+        const container = document.getElementById('hitl-queue-container');
+        badge.textContent = `${tasks.length} Pending`;
+
+        if (tasks.length === 0) {
+          container.innerHTML = '<p class="text-sm text-gray-400 italic">No tasks currently awaiting approval.</p>';
+          return;
+        }
+
+        container.innerHTML = '';
+        tasks.forEach(t => {
+          const card = document.createElement('div');
+          card.className = 'border border-yellow-200 bg-yellow-50 rounded-lg p-5 shadow-sm';
+          card.innerHTML = `
+            <div class="flex justify-between items-start">
+              <div>
+                <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-yellow-200 text-yellow-900 uppercase">
+                  ${t.escalation.reason}
+                </span>
+                <h4 class="text-base font-bold text-gray-900 mt-2">${t.escalation.question}</h4>
+                <p class="text-xs text-gray-500 mt-1 font-mono">Task ID: ${t.task_id} &bull; Suspended At: ${t.suspended_at}</p>
+                <div class="mt-3 text-sm text-gray-700 bg-white p-3 rounded border border-yellow-100">
+                  <p><strong>Vendor:</strong> ${t.escalation.context.vendor_name || 'N/A'}</p>
+                  <p><strong>Amount:</strong> $${Number(t.escalation.context.amount || 0).toLocaleString()}</p>
+                  <p><strong>Invoice Code:</strong> ${t.escalation.context.invoice_number || 'N/A'}</p>
+                  <p class="text-xs text-red-600 mt-1">Exceeds autonomous spending threshold of $${Number(t.escalation.context.threshold || 10000).toLocaleString()}</p>
+                </div>
+              </div>
+              <div class="flex flex-col space-y-2 ml-4">
+                <button onclick="resolveApproval('${t.task_id}', true)" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-xs font-bold rounded shadow-sm">
+                  ✓ Approve Action
+                </button>
+                <button onclick="resolveApproval('${t.task_id}', false)" class="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded shadow-sm">
+                  ✕ Reject Task
+                </button>
+              </div>
+            </div>
+          `;
+          container.appendChild(card);
+        });
+      } catch (err) {
+        console.error('Error fetching approvals', err);
+      }
+    }
+
+    async function resolveApproval(taskId, approved) {
+      try {
+        const res = await fetch(`/api/hitl/tasks/${taskId}/resolve`, {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({approved: approved, notes: `Reviewed by operator via web portal.`})
+        });
+        if (res.ok) {
+          showToast(`Task ${taskId} decision recorded: ${approved ? 'APPROVED' : 'REJECTED'}. Agent will resume.`, true);
+          await fetchPendingApprovals();
+          await fetchInvoices();
+        }
+      } catch (e) {
+        showToast(`Failed to resolve approval: ${e.message}`, false);
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      fetchInvoices();
+      fetchPendingApprovals();
+    });
   </script>
 </body>
 </html>

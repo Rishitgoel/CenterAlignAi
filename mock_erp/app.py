@@ -1269,3 +1269,29 @@ async def portal_page():
         return HTMLResponse(content=portal_file.read_text(encoding="utf-8"))
     return HTMLResponse(content="<h1>Portal not found</h1>", status_code=404)
 
+
+@app.get("/api/hitl/tasks")
+async def list_hitl_tasks():
+    from agent.hitl_manager import hitl_manager
+    return hitl_manager.list_pending_tasks()
+
+
+@app.get("/api/hitl/tasks/{task_id}")
+async def get_hitl_task(task_id: str):
+    from agent.hitl_manager import hitl_manager
+    task = hitl_manager.get_task(task_id)
+    if not task:
+        raise HTTPException(status_code=404, detail=f"Suspended task '{task_id}' not found")
+    return task
+
+
+@app.post("/api/hitl/tasks/{task_id}/resolve")
+async def resolve_hitl_task(task_id: str, payload: dict):
+    from agent.hitl_manager import hitl_manager
+    approved = payload.get("approved", True)
+    notes = payload.get("notes", "Resolved via CentrAlign Operator Dashboard")
+    res = hitl_manager.resolve_task(task_id, approved=approved, operator_notes=notes)
+    if not res:
+        raise HTTPException(status_code=404, detail=f"Suspended task '{task_id}' not found")
+    return {"status": "resolved", "task": res}
+

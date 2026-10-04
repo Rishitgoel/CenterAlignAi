@@ -73,7 +73,12 @@ class Agent:
             # 1. Check for Human-in-the-Loop Escalation
             if observation.needs_escalation and observation.escalation:
                 self._transition_state(AgentState.ESCALATED)
-                approved = await self._handle_escalation(observation.escalation)
+                approved = await self._handle_escalation(
+                    escalation=observation.escalation,
+                    memory=memory,
+                    step_idx=step_idx,
+                    plan=plan,
+                )
                 if approved:
                     console.print("[green][APPROVED] Human approval granted. Proceeding to enter invoice.[/green]")
                     # Record facts and continue
@@ -202,12 +207,32 @@ class Agent:
             table.add_row(c.target, str(c.expected), str(c.actual), status_str)
         console.print(table)
 
-    async def _handle_escalation(self, escalation: HumanEscalation) -> bool:
+    async def _handle_escalation(
+        self,
+        escalation: HumanEscalation,
+        memory: WorkingMemory,
+        step_idx: int,
+        plan: TaskPlan,
+    ) -> bool:
+        from agent.hitl_manager import hitl_manager
+
+        # Persist suspended task into HITL manager storage queue
+        hitl_manager.suspend_task(
+            task_id=memory.task_id,
+            original_request=memory.original_request,
+            escalation=escalation,
+            discovered_facts=memory.discovered_facts,
+            current_step_idx=step_idx,
+            plan_json=plan.model_dump_json(),
+        )
+
         console.print(
             Panel(
                 f"[bold red]HUMAN-IN-THE-LOOP ESCALATION REQUIRED[/bold red]\n\n"
                 f"{escalation.question}\n\n"
-                f"[dim]Reason: {escalation.reason}[/dim]",
+                f"[dim]Reason: {escalation.reason}[/dim]\n"
+                f"[bold cyan]Queue Status:[/bold cyan] Task registered in Web Operator Queue (/portal)\n"
+                f"[dim]Task ID: {memory.task_id}[/dim]",
                 title="Human Approval Gate",
                 border_style="yellow",
             )
