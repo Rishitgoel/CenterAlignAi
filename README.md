@@ -1,11 +1,16 @@
 # 🤖 Autonomous AI Task Worker — CentrAlign AI (Enterprise Edition)
 
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](https://www.python.org/)
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-Render-46E3B7.svg)](https://centeralignai.onrender.com/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.110%2B-009688.svg)](https://fastapi.tiangolo.com/)
 [![Playwright](https://img.shields.io/badge/Browser-Playwright%20Chromium-45ba4b.svg)](https://playwright.dev/)
 [![Gemini 3.8 Flash](https://img.shields.io/badge/Model-Gemini%203.8%20Flash-4285F4.svg)](https://ai.google.dev/)
 [![Security: SOC2 Audit Hash](https://img.shields.io/badge/Audit-SHA--256%20Chained-orange.svg)]()
 [![Tests: 27 Passed](https://img.shields.io/badge/Tests-27%20Passed-success.svg)]()
+
+> 🌐 **Live Interactive Cloud Demo**: [**https://centeralignai.onrender.com/**](https://centeralignai.onrender.com/)  
+> 📖 **Interactive Swagger API Docs**: [**https://centeralignai.onrender.com/docs**](https://centeralignai.onrender.com/docs)  
+> 💚 **Health Check**: [**https://centeralignai.onrender.com/health**](https://centeralignai.onrender.com/health)
 
 An enterprise-ready **Autonomous AI Task Worker / Company Operator** that takes natural language company instructions and autonomously completes them using tool orchestration, browser UI automation, multimodal document ingestion, closed-loop state verification, self-correcting error recovery, human-in-the-loop governance, and tamper-evident cryptographic audit logs.
 
@@ -368,10 +373,25 @@ If given additional time, our immediate roadmap includes:
 
 ---
 
-## 🎥 Demo Video & Walkthrough
+## 🎥 Live Interactive Demo & Prototype Access
 
-- **Recorded Walkthrough**: [Link to Demo Video (YouTube / Loom) — *To be added by candidate*]
-- **Demo Script**: Follow the complete 2m45s narration script in [`docs/DEMO_SCRIPT.md`](docs/DEMO_SCRIPT.md).
+The prototype is fully deployed and accessible live in the cloud:
+
+- 🌐 **Live Cloud Portal**: [**https://centeralignai.onrender.com/**](https://centeralignai.onrender.com/)
+- 📖 **Interactive Swagger API Docs**: [**https://centeralignai.onrender.com/docs**](https://centeralignai.onrender.com/docs)
+- 💚 **Live Health Check**: [**https://centeralignai.onrender.com/health**](https://centeralignai.onrender.com/health)
+
+### 🕹️ How to Test the Live Demo in Your Browser:
+1. Open [**https://centeralignai.onrender.com/**](https://centeralignai.onrender.com/) in your browser.
+2. In the top **AI Worker Command Bar**, click any of the 1-click preset scenario pills or type your own instruction:
+   - **⚡ Clean Invoice (Globex)**: Dispatches a multi-item invoice, opens the slide-over execution drawer, streams steps in real-time via SSE, mutates the DB, and shows Query-Back verification proofs.
+   - **📄 Ingest Custom PDF**: Demonstrates interactive document intake. The drawer prompts for an invoice attachment with a drag-and-drop dropzone; upload any PDF or click *"Download Sample PDF"* to test.
+   - **⚠️ High-Value Escalation ($75k)**: Demonstrates enterprise policy guardrails ($10,000 spend threshold). The task pauses into the Human-in-the-Loop queue with an inline *"✓ Approve & Resume"* button.
+   - **🔄 Malformed Syntax**: Demonstrates autonomous self-healing and regex heuristic recovery.
+3. Observe how the background **Accounts Payable Ledger**, **Opportunity Kanban Board**, and **Cryptographic Audit Ledger** update automatically in real time without refreshing the page.
+
+### 🎙️ Video Recording Walkthrough & Script:
+- **Narration & Demo Script**: Detailed 2m45s narration script available in [`docs/DEMO_SCRIPT.md`](docs/DEMO_SCRIPT.md).
 
 ---
 

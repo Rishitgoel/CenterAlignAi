@@ -1,8 +1,9 @@
 # 📋 CentrAlign AI Submission Checklist & Delivery Package
 
 ## 🕒 Status
-- **Current Status**: All 5 Enterprise Evolution Phases Complete & Pushed to Remote
+- **Current Status**: All 5 Enterprise Evolution Phases Complete & Deployed Live
 - **GitHub Repository**: `https://github.com/Rishitgoel/CenterAlignAi`
+- **Live Cloud Prototype**: `https://centeralignai.onrender.com/`
 - **Current Branch**: `main` (clean sync)
 - **Automated Tests**: 27/27 passed across 3 test suites (`pytest tests/ -v`)
 - **Benchmark Evaluation**: 100% Success Rate across synthetic scenarios (`python -m benchmarks.eval_suite`)
@@ -24,6 +25,7 @@
 | **9. Deterministic Outcome Verification** | Independent Query-Back DB verification, DOM screenshot verification, and file existence assertion | `agent/verifier.py` | ✅ Verified |
 | **10. Human Clarification / Escalation** | $10,000 spend threshold gate with persistent task suspension and Web Operator Queue | `agent/hitl_manager.py`, `mock_erp/static/portal.html` | ✅ Verified |
 | **11. Concise Summary & Evidence Trail** | Structured JSON logs + SHA-256 hash-chained cryptographic compliance ledger | `logs/task_*.json`, `security/audit_ledger.py` | ✅ Verified |
+| **12. Live Working Demo / Video** | Live cloud web deployment on Render (`https://centeralignai.onrender.com/`) with interactive drawer, dynamic intake, and 3-minute narration script | `https://centeralignai.onrender.com/`, `docs/DEMO_SCRIPT.md` | ✅ Live |
 
 ---
 
@@ -35,34 +37,17 @@
 4. **Verification**: Exceptional. Implements the **Query-Back Verification Pattern** — independently queries the database and inspects visual DOM state rather than trusting LLM output.
 5. **Generalization**: High. Ingests arbitrary OpenAPI v3 schemas at runtime via `tools/openapi_loader.py`, allowing the worker to adapt to new APIs without code modifications.
 6. **Engineering Quality**: Pure, clean Python with Pydantic v2, FastAPI, and Playwright. Zero heavy bloated wrappers. 27/27 passing tests. Full Docker containerization.
-7. **Product Thinking**: Solves real operational bottlenecks with an Accounts Payable portal at `http://127.0.0.1:8000/portal` and a persistent HITL approval queue.
+7. **Product Thinking**: Solves real operational bottlenecks with an Accounts Payable portal at `http://127.0.0.1:8000/portal` (and live at `https://centeralignai.onrender.com/`) and a persistent HITL approval queue.
 8. **Technical Understanding**: Clear architectural rationale documented in `README.md` and `docs/ARCHITECTURE.md`.
 
 ---
 
-## 🎯 What to Do Next (Final Submission Steps)
+## 🎯 Ready for Submission!
 
-### Step 1: Record the Demo Video (2–3 minutes)
-1. Launch the server in Terminal 1:
-   ```bash
-   python run_server.py
-   ```
-2. Open the web portal: `http://127.0.0.1:8000/portal`
-3. Follow the 2m45s script in [`docs/DEMO_SCRIPT.md`](file:///d:/Side%20project/CenterAlignAi/docs/DEMO_SCRIPT.md):
-   - **Scenario 1**: Browser portal entry (`Stark Industries INV-WEB-770`) with state verification.
-   - **Scenario 2**: Self-healing error recovery from malformed JSON (`invoice_malformed_003.json`).
-   - **Scenario 3**: High-value governance escalation (`invoice_highvalue_004.json`) showing approval in the Web Queue.
-4. Upload to Loom or YouTube (Unlisted) and paste the video link into `README.md`.
-
-### Step 2: Final Git Push
-Commit any updated docs and push to your GitHub repository:
-```bash
-git add .
-git commit -m "docs: finalize architecture, demo script, and submission package"
-git push origin main
-```
-
-### Step 3: Submit Link
-Submit the GitHub repo link:
-👉 `https://github.com/Rishitgoel/CenterAlignAi`
-along with your demo video URL.
+### Links to Submit:
+1. **GitHub Repository**:
+   👉 `https://github.com/Rishitgoel/CenterAlignAi`
+2. **Live Cloud Demo**:
+   👉 `https://centeralignai.onrender.com/`
+3. **Interactive API Documentation**:
+   👉 `https://centeralignai.onrender.com/docs`
