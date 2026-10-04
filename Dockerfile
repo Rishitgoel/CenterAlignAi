@@ -44,5 +44,5 @@ RUN mkdir -p logs/suspended_tasks logs/jobs
 
 EXPOSE 8000
 
-# Default command launches FastAPI Mock ERP + Web Portal
-CMD ["uvicorn", "mock_erp.app:app", "--host", "0.0.0.0", "--port", "8000"]
+# Default command launches FastAPI Mock ERP + Web Portal dynamically on Render's PORT
+CMD ["sh", "-c", "uvicorn mock_erp.app:app --host 0.0.0.0 --port ${PORT:-8000}"]
