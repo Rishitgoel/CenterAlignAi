@@ -183,7 +183,9 @@ class DocumentExtractorTool(Tool):
         elif "globex" in text_content.lower():
             vendor = "Globex Corporation"
 
-        inv_match = re.search(r"(?:invoice(?:_number|#| no)?)\s*[:=]?\s*([A-Za-z0-9-_]+)", text_content, re.IGNORECASE)
+        inv_match = re.search(r"(?:invoice\s*(?:number|_number|#|no|id)|inv\s*#)\s*[:=]?\s*([A-Za-z0-9-_]+)", text_content, re.IGNORECASE)
+        if not inv_match:
+            inv_match = re.search(r"invoice\s*[:=]\s*([A-Za-z0-9-_]+)", text_content, re.IGNORECASE)
         inv_num = inv_match.group(1).strip() if inv_match else "INV-PDF-889"
 
         amt_match = re.search(r"(?:amount|total)\s*[:=]?\s*\$?\s*([0-9][0-9,]*\.?[0-9]*)", text_content, re.IGNORECASE)
