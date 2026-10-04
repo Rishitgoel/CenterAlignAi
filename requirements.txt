@@ -7,3 +7,6 @@ rich>=13.7.0
 aiosqlite>=0.20.0
 google-genai>=2.25.0
 python-dotenv>=1.0.1
+playwright>=1.42.0
+pypdf>=4.1.0
+pytest>=8.0.0
