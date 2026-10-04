@@ -1,7 +1,9 @@
+import asyncio
 from datetime import datetime, timezone
 import json
 from pathlib import Path
 import time
+from typing import Any, Callable, Dict, List, Optional, Union
 import uuid
 from rich.console import Console
 from rich.panel import Panel
@@ -31,8 +33,17 @@ console = Console()
 
 
 class Agent:
-    def __init__(self, interactive: bool = True):
+    def __init__(
+        self,
+        interactive: bool = True,
+        on_event: Optional[Callable[[Dict[str, Any]], Any]] = None,
+        escalation_handler: Optional[Callable[[HumanEscalation, WorkingMemory], Any]] = None,
+        input_handler: Optional[Callable[[Dict[str, Any], WorkingMemory], Any]] = None,
+    ):
         self.interactive = interactive
+        self.on_event = on_event
+        self.escalation_handler = escalation_handler
+        self.input_handler = input_handler
         self.registry = get_default_registry()
         self.planner = Planner()
         self.executor = Executor(self.registry)
@@ -41,32 +52,64 @@ class Agent:
         self.state = AgentState.IDLE
         self.current_task_id = None
 
+    async def _emit_event(self, event_type: str, data: Optional[Dict[str, Any]] = None):
+        if not self.on_event:
+            return
+        payload = {
+            "type": event_type,
+            "task_id": self.current_task_id,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            **(data or {}),
+        }
+        try:
+            if asyncio.iscoroutinefunction(self.on_event):
+                await self.on_event(payload)
+            elif callable(self.on_event):
+                res = self.on_event(payload)
+                if asyncio.iscoroutine(res):
+                    await res
+        except Exception as e:
+            console.print(f"[dim red]Error emitting event: {e}[/dim red]")
+
     async def run(self, task: str) -> ExecutionLog:
         task_id = f"task_{datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')}_{uuid.uuid4().hex[:6]}"
         self.current_task_id = task_id
         started_at = datetime.now(timezone.utc).isoformat()
         start_perf = time.perf_counter()
 
+        await self._emit_event("TASK_STARTED", {"task": task})
+
         memory = WorkingMemory(task_id=task_id, original_request=task)
 
-        self._transition_state(AgentState.UNDERSTANDING)
+        await self._transition_state(AgentState.UNDERSTANDING)
         console.print(Panel(f"[bold green]Goal:[/bold green] {task}", title="Task Understanding", border_style="green"))
 
         # --- PLANNING ---
-        self._transition_state(AgentState.PLANNING)
+        await self._transition_state(AgentState.PLANNING)
         tools_prompt = self.registry.get_tools_prompt()
         plan = await self.planner.create_plan(task, tools_prompt, memory)
         memory.current_plan = plan
 
         self._display_plan(plan)
+        await self._emit_event("PLAN_CREATED", {"goal": task, "steps": [s.model_dump() for s in plan.steps]})
 
         # --- EXECUTION LOOP ---
         step_idx = 0
         while step_idx < len(plan.steps):
             step = plan.steps[step_idx]
 
-            self._transition_state(AgentState.EXECUTING)
+            await self._transition_state(AgentState.EXECUTING)
             console.print(f"\n[bold cyan]Executing Step {step.step_number}/{len(plan.steps)}:[/bold cyan] {step.description}")
+            await self._emit_event(
+                "STEP_START",
+                {
+                    "step_number": step.step_number,
+                    "total_steps": len(plan.steps),
+                    "tool_name": step.tool_name,
+                    "description": step.description,
+                    "tool_input": step.tool_input,
+                },
+            )
 
             result = await self.executor.execute_step(step, memory)
             memory.add_step_result(result)
@@ -81,12 +124,25 @@ class Agent:
                 },
             )
 
-            self._transition_state(AgentState.OBSERVING)
+            await self._emit_event(
+                "STEP_COMPLETE",
+                {
+                    "step_number": step.step_number,
+                    "total_steps": len(plan.steps),
+                    "tool_name": step.tool_name,
+                    "success": result.success,
+                    "duration_ms": result.duration_ms,
+                    "output_data": result.output_data,
+                    "error_message": result.error_message,
+                },
+            )
+
+            await self._transition_state(AgentState.OBSERVING)
             observation = self.observer.observe(step, result, memory)
 
             # 1. Check for Human-in-the-Loop Escalation
             if observation.needs_escalation and observation.escalation:
-                self._transition_state(AgentState.ESCALATED)
+                await self._transition_state(AgentState.ESCALATED)
                 approved = await self._handle_escalation(
                     escalation=observation.escalation,
                     memory=memory,
@@ -102,7 +158,7 @@ class Agent:
                     continue
                 else:
                     console.print("[red][REJECTED] Human rejected task execution. Safely halting.[/red]")
-                    return self._finalize_log(
+                    return await self._finalize_log(
                         memory=memory,
                         state=AgentState.FAILED,
                         summary="Execution halted by user during human-in-the-loop escalation.",
@@ -116,11 +172,19 @@ class Agent:
                 console.print(f"[bold red][FAILURE] Step {step.step_number} Failed:[/bold red] {result.error_message}")
 
                 if memory.retry_count < settings.max_retries:
-                    self._transition_state(AgentState.ADAPTING)
+                    await self._transition_state(AgentState.ADAPTING)
                     memory.retry_count += 1
                     console.print(
                         f"[bold yellow][RETRY] Self-Correcting (Attempt {memory.retry_count}/{settings.max_retries}):[/bold yellow] "
                         "Re-planning alternative strategy..."
+                    )
+                    await self._emit_event(
+                        "ADAPTATION_TRIGGERED",
+                        {
+                            "retry_count": memory.retry_count,
+                            "failed_step": step.step_number,
+                            "error_message": result.error_message,
+                        },
                     )
 
                     new_plan = await self.planner.replan(
@@ -133,11 +197,12 @@ class Agent:
                     plan = new_plan
                     memory.current_plan = plan
                     self._display_plan(plan, title="Revised Plan (Recovered)")
+                    await self._emit_event("PLAN_CREATED", {"goal": task, "steps": [s.model_dump() for s in plan.steps], "is_replan": True})
                     step_idx = 0  # Re-evaluate from first recovery step
                     continue
                 else:
                     console.print("[bold red][ERROR] Max retries exceeded. Task execution failed.[/bold red]")
-                    return self._finalize_log(
+                    return await self._finalize_log(
                         memory=memory,
                         state=AgentState.FAILED,
                         summary=f"Task failed after {memory.retry_count} adaptation attempts. Last error: {result.error_message}",
@@ -153,14 +218,24 @@ class Agent:
             step_idx += 1
 
         # --- VERIFICATION ---
-        self._transition_state(AgentState.VERIFYING)
+        await self._transition_state(AgentState.VERIFYING)
         console.print("\n[bold magenta]Verifying Outcome against System of Record...[/bold magenta]")
         verification = await self.verifier.verify(plan, memory)
 
         self._display_verification(verification)
+        await self._emit_event(
+            "VERIFICATION_REPORT",
+            {
+                "passed": verification.passed,
+                "checks": [c.model_dump() for c in verification.checks],
+                "discrepancies": verification.discrepancies,
+                "evidence": verification.evidence,
+                "block_hash": getattr(audit_ledger, "_last_hash", ""),
+            },
+        )
 
         if verification.passed:
-            self._transition_state(AgentState.COMPLETED)
+            await self._transition_state(AgentState.COMPLETED)
             vendor = memory.get_fact("vendor_name") or "Vendor"
             inv_num = memory.get_fact("invoice_number") or "N/A"
             amt = float(memory.get_fact("amount", 0.0))
@@ -172,7 +247,7 @@ class Agent:
                 f"({inv_num}) for ${amt:,.2f}. {verif_proof}"
             )
             console.print(Panel(f"[bold green]SUCCESS:[/bold green] {summary}", title="Task Complete", border_style="green"))
-            return self._finalize_log(
+            return await self._finalize_log(
                 memory=memory,
                 state=AgentState.COMPLETED,
                 summary=summary,
@@ -181,10 +256,10 @@ class Agent:
                 evidence=verification.evidence,
             )
         else:
-            self._transition_state(AgentState.FAILED)
+            await self._transition_state(AgentState.FAILED)
             summary = f"Task execution finished but state verification failed: {', '.join(verification.discrepancies)}"
             console.print(Panel(f"[bold red]VERIFICATION FAILED:[/bold red] {summary}", title="Verification Error", border_style="red"))
-            return self._finalize_log(
+            return await self._finalize_log(
                 memory=memory,
                 state=AgentState.FAILED,
                 summary=summary,
@@ -193,7 +268,7 @@ class Agent:
                 evidence=verification.evidence,
             )
 
-    def _transition_state(self, new_state: AgentState):
+    async def _transition_state(self, new_state: AgentState):
         prev = self.state
         self.state = new_state
         console.print(f"[dim]State Transition: {prev.value} -> [bold]{new_state.value}[/bold][/dim]")
@@ -203,6 +278,7 @@ class Agent:
                 action_type="STATE_TRANSITION",
                 payload={"from_state": prev.value, "to_state": new_state.value},
             )
+        await self._emit_event("STATE_CHANGE", {"from_state": prev.value, "to_state": new_state.value})
 
     def _display_plan(self, plan: TaskPlan, title: str = "Action Plan"):
         table = Table(title=title, show_header=True, header_style="bold cyan")
@@ -262,8 +338,23 @@ class Agent:
                 border_style="yellow",
             )
         )
+        await self._emit_event(
+            "ESCALATION_TRIGGERED",
+            {
+                "question": escalation.question,
+                "reason": escalation.reason,
+                "context": escalation.context,
+                "options": escalation.options,
+            },
+        )
+
         approved = False
-        if self.interactive:
+        if self.escalation_handler:
+            if asyncio.iscoroutinefunction(self.escalation_handler):
+                approved = await self.escalation_handler(escalation, memory)
+            else:
+                approved = self.escalation_handler(escalation, memory)
+        elif self.interactive:
             approved = Confirm.ask("Do you approve proceeding with this action?", default=True)
         else:
             # Non-interactive default approval
@@ -278,9 +369,16 @@ class Agent:
                 "approved": approved,
             },
         )
+        await self._emit_event(
+            "ESCALATION_RESOLVED",
+            {
+                "approved": approved,
+                "question": escalation.question,
+            },
+        )
         return approved
 
-    def _finalize_log(
+    async def _finalize_log(
         self,
         memory: WorkingMemory,
         state: AgentState,
@@ -321,5 +419,29 @@ class Agent:
         sanitized_json = credential_vault.redact_text(log_json)
         log_path.write_text(sanitized_json, encoding="utf-8")
         console.print(f"\n[dim]Audit evidence log written to: [bold]{log_path}[/bold][/dim]")
+
+        block_hash = getattr(audit_ledger, "_last_hash", "")
+        if state == AgentState.COMPLETED:
+            await self._emit_event(
+                "TASK_COMPLETED",
+                {
+                    "summary": summary,
+                    "final_state": state.value,
+                    "duration_ms": duration_ms,
+                    "evidence": evidence or {},
+                    "block_hash": block_hash,
+                },
+            )
+        else:
+            await self._emit_event(
+                "TASK_FAILED",
+                {
+                    "summary": summary,
+                    "final_state": state.value,
+                    "duration_ms": duration_ms,
+                    "evidence": evidence or {},
+                    "block_hash": block_hash,
+                },
+            )
 
         return log

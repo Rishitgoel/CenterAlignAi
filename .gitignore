@@ -43,3 +43,9 @@ logs/
 .vscode/
 .idea/
 *.swp
+
+# User uploaded demo files
+demo/invoices/uploads/
+
+# Generated local reports
+reports/

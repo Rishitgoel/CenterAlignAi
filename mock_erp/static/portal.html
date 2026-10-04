@@ -413,6 +413,87 @@
       </div>
 
       <!-- ========================================== -->
+      <!-- AI WORKER COMMAND CENTER (HERO COMMAND BAR)-->
+      <!-- ========================================== -->
+      <section id="ai-command-center" class="px-6 pt-3.5 pb-2 border-b border-gray-100 bg-[#faf9f6]/70">
+        <!-- AI Command Bar Input Card -->
+        <div id="ai-command-card" ondragover="handleCommandCardDragOver(event)" ondragleave="handleCommandCardDragLeave(event)" ondrop="handleCommandCardDrop(event)" class="bg-white border border-[#e5e2da] rounded-xl shadow-xs p-2 transition-all focus-within:border-stone-400 focus-within:ring-1 focus-within:ring-stone-300">
+          <form id="ai-dispatch-form" onsubmit="handleCommandBarSubmit(event)" class="flex items-center gap-2">
+            <!-- Sparkle / Autonomous Agent Icon -->
+            <div class="flex-shrink-0 pl-1.5 flex items-center justify-center text-amber-700">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+              </svg>
+            </div>
+
+            <!-- Natural Language Instruction Input -->
+            <input 
+              type="text" 
+              id="ai-command-input"
+              placeholder="Ask CentrAlign AI Worker (e.g. 'Process Globex invoice' or 'Add this PDF')..."
+              class="flex-1 bg-transparent border-0 text-xs font-medium text-gray-900 placeholder-stone-400 focus:outline-none focus:ring-0"
+              autocomplete="off"
+            />
+
+            <!-- Attached File Indicator / Pill -->
+            <div id="ai-attached-file-badge" class="hidden items-center gap-1 px-2 py-0.5 bg-stone-100 border border-stone-200 rounded-full text-[11px] font-mono text-stone-700">
+              <span class="truncate max-w-[130px]" id="ai-attached-filename"></span>
+              <button type="button" onclick="clearAttachedFile()" class="text-stone-400 hover:text-stone-700 font-bold ml-0.5">&times;</button>
+            </div>
+
+            <!-- Pre-Attach Document Button (Paperclip) -->
+            <label for="ai-file-input" title="Attach invoice PDF or document" class="p-1.5 text-stone-400 hover:text-stone-700 hover:bg-stone-100 rounded-md cursor-pointer transition-colors flex items-center">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"/>
+              </svg>
+              <input type="file" id="ai-file-input" onchange="handleFileSelect(event)" class="hidden" accept=".pdf,.png,.jpg,.jpeg,.json,.eml" />
+            </label>
+
+            <!-- Dispatch Action Button -->
+            <button 
+              type="submit" 
+              id="ai-dispatch-btn" 
+              class="px-3.5 py-1.5 bg-gray-900 hover:bg-black text-white text-xs font-semibold rounded-md shadow-2xs flex items-center gap-1.5 transition-all active:scale-95 flex-shrink-0"
+            >
+              <span>🚀</span>
+              <span>Dispatch Worker</span>
+              <kbd class="hidden sm:inline-block ml-1 font-mono text-[9px] bg-gray-800 text-gray-300 px-1 py-0.5 rounded">↵</kbd>
+            </button>
+          </form>
+        </div>
+
+        <!-- 5 Curated Demo Scenario Pills -->
+        <div class="flex items-center gap-1.5 pt-2 pb-0.5 overflow-x-auto text-[11px] scrollbar-none">
+          <span class="text-[10px] font-semibold text-stone-400 uppercase tracking-wider flex-shrink-0 mr-1">Demo Scenarios:</span>
+          
+          <button type="button" onclick="dispatchScenario('clean')" class="scenario-pill flex items-center gap-1 px-2.5 py-1 rounded-full border border-stone-200 bg-white hover:bg-stone-50 hover:border-stone-300 text-stone-700 font-medium transition-all shadow-2xs whitespace-nowrap active:scale-95">
+            <span class="text-emerald-600">⚡</span>
+            <span>Clean Invoice (Globex)</span>
+          </button>
+
+          <button type="button" onclick="dispatchScenario('pdf')" class="scenario-pill flex items-center gap-1 px-2.5 py-1 rounded-full border border-stone-200 bg-white hover:bg-stone-50 hover:border-stone-300 text-stone-700 font-medium transition-all shadow-2xs whitespace-nowrap active:scale-95">
+            <span class="text-blue-600">⚡</span>
+            <span>Multimodal PDF (Cyberdyne)</span>
+          </button>
+
+          <button type="button" onclick="dispatchScenario('malformed')" class="scenario-pill flex items-center gap-1 px-2.5 py-1 rounded-full border border-stone-200 bg-white hover:bg-stone-50 hover:border-stone-300 text-stone-700 font-medium transition-all shadow-2xs whitespace-nowrap active:scale-95">
+            <span class="text-amber-600">⚡</span>
+            <span>Self-Heal Malformed File</span>
+          </button>
+
+          <button type="button" onclick="dispatchScenario('highvalue')" class="scenario-pill flex items-center gap-1 px-2.5 py-1 rounded-full border border-stone-200 bg-white hover:bg-stone-50 hover:border-stone-300 text-stone-700 font-medium transition-all shadow-2xs whitespace-nowrap active:scale-95">
+            <span class="text-red-600">⚠️</span>
+            <span>High-Value Escalation ($75k)</span>
+          </button>
+
+          <button type="button" onclick="dispatchScenario('custom_pdf')" class="scenario-pill flex items-center gap-1 px-2.5 py-1 rounded-full border border-amber-300 bg-amber-50/70 hover:bg-amber-100/70 text-amber-900 font-semibold transition-all shadow-2xs whitespace-nowrap active:scale-95">
+            <span>📄</span>
+            <span>Ingest Custom PDF (Interactive)</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- ========================================== -->
       <!-- 3. WORKSPACE VIEWS CONTAINER               -->
       <!-- ========================================== -->
       <div class="flex-1 p-6 overflow-y-auto">
@@ -667,6 +748,185 @@
       </div>
     </div>
   </div>
+
+  <!-- ========================================== -->
+  <!-- 4B. IN-APP AI WORKER LIVE EXECUTION DRAWER -->
+  <!-- ========================================== -->
+  <div id="ai-drawer-backdrop" onclick="closeAiDrawer()" class="fixed inset-0 bg-black/20 z-40 hidden transition-opacity"></div>
+  
+  <aside id="ai-drawer" class="fixed inset-y-0 right-0 w-full sm:w-[500px] lg:w-[560px] bg-white border-l border-[#e5e2da] shadow-2xl z-50 transform translate-x-full transition-transform duration-300 ease-in-out flex flex-col">
+    <!-- Drawer Header -->
+    <div class="px-6 py-4 border-b border-[#e5e2da] bg-[#faf9f6] flex-shrink-0">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-2">
+          <span id="drawer-status-pill" class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-stone-100 text-stone-700 border border-stone-200">
+            <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse" id="drawer-status-dot"></span>
+            <span id="drawer-status-text">PLANNING</span>
+          </span>
+          <span id="drawer-task-id" onclick="copyTaskId()" title="Click to copy Task ID" class="font-mono text-[11px] text-gray-500 bg-white px-2 py-0.5 rounded border border-gray-200 cursor-pointer hover:border-stone-400 select-all transition-colors">task_...</span>
+        </div>
+        <button onclick="closeAiDrawer()" class="text-gray-400 hover:text-gray-600 text-lg font-bold p-1 rounded-md hover:bg-stone-200/50 transition-colors">&times;</button>
+      </div>
+
+      <div class="mt-2.5">
+        <h3 id="drawer-goal-text" class="text-xs font-semibold text-gray-900 leading-snug line-clamp-2">Processing task...</h3>
+      </div>
+
+      <!-- CentrAlign 5-Stage Visual Workflow Stepper -->
+      <div class="mt-4 pt-3 border-t border-stone-200/70">
+        <div class="flex items-center justify-between text-[10px] font-medium text-stone-500 mb-1.5">
+          <span>Autonomous Progress</span>
+          <span id="drawer-step-counter" class="font-mono text-stone-700 font-semibold">Stage 1 of 5</span>
+        </div>
+        
+        <div class="grid grid-cols-5 gap-1.5 relative">
+          <!-- Stage 1: Ingest -->
+          <div id="step-node-1" class="step-node flex flex-col items-center text-center p-1.5 rounded-lg border border-amber-300 bg-amber-50/80 transition-all">
+            <span class="step-ring w-4 h-4 rounded-full border-2 border-amber-600 bg-amber-600 text-white text-[9px] flex items-center justify-center font-bold">1</span>
+            <span class="step-label text-[10px] font-semibold text-amber-900 mt-1">Ingest</span>
+          </div>
+
+          <!-- Stage 2: Extract -->
+          <div id="step-node-2" class="step-node flex flex-col items-center text-center p-1.5 rounded-lg border border-stone-200 bg-white transition-all">
+            <span class="step-ring w-4 h-4 rounded-full border border-stone-300 text-stone-400 text-[9px] flex items-center justify-center font-bold">2</span>
+            <span class="step-label text-[10px] text-stone-500 mt-1">Extract</span>
+          </div>
+
+          <!-- Stage 3: Policy -->
+          <div id="step-node-3" class="step-node flex flex-col items-center text-center p-1.5 rounded-lg border border-stone-200 bg-white transition-all">
+            <span class="step-ring w-4 h-4 rounded-full border border-stone-300 text-stone-400 text-[9px] flex items-center justify-center font-bold">3</span>
+            <span class="step-label text-[10px] text-stone-500 mt-1">Policy</span>
+          </div>
+
+          <!-- Stage 4: Mutate -->
+          <div id="step-node-4" class="step-node flex flex-col items-center text-center p-1.5 rounded-lg border border-stone-200 bg-white transition-all">
+            <span class="step-ring w-4 h-4 rounded-full border border-stone-300 text-stone-400 text-[9px] flex items-center justify-center font-bold">4</span>
+            <span class="step-label text-[10px] text-stone-500 mt-1">Mutate ERP</span>
+          </div>
+
+          <!-- Stage 5: Verify -->
+          <div id="step-node-5" class="step-node flex flex-col items-center text-center p-1.5 rounded-lg border border-stone-200 bg-white transition-all">
+            <span class="step-ring w-4 h-4 rounded-full border border-stone-300 text-stone-400 text-[9px] flex items-center justify-center font-bold">5</span>
+            <span class="step-label text-[10px] text-stone-500 mt-1">Verify</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Drawer Scrollable Body -->
+    <div class="flex-1 overflow-y-auto p-5 space-y-4 text-xs">
+
+      <!-- Interactive Document Intake Dropzone (Conditional for 'Add this PDF') -->
+      <div 
+        id="drawer-dropzone" 
+        ondragover="handleDropzoneDragOver(event)" 
+        ondragleave="handleDropzoneDragLeave(event)" 
+        ondrop="handleDropzoneDrop(event)"
+        class="hidden p-4 rounded-xl border-2 border-dashed border-amber-300 bg-amber-50/50 hover:bg-amber-50 text-center transition-all cursor-pointer"
+      >
+        <div class="w-10 h-10 mx-auto rounded-full bg-amber-100 text-amber-700 flex items-center justify-center mb-2 pointer-events-none">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+        </div>
+        <h4 class="text-xs font-bold text-amber-900 pointer-events-none" id="drawer-dropzone-title">Document Intake Required</h4>
+        <p class="text-[11px] text-amber-800 mt-1 pointer-events-none" id="drawer-dropzone-prompt">Drag & drop your invoice PDF here, or click to browse</p>
+        <div id="drawer-dropzone-status" class="hidden mt-2 text-[11px] font-mono font-medium text-amber-900 animate-pulse"></div>
+        <div class="mt-3 flex items-center justify-center gap-2">
+          <label for="drawer-file-upload-input" class="px-3 py-1.5 bg-amber-600 hover:bg-amber-700 text-white font-semibold rounded-md shadow-2xs cursor-pointer text-xs transition-all active:scale-95">
+            Browse & Upload PDF
+            <input type="file" id="drawer-file-upload-input" onchange="handleDrawerFileSelect(event)" class="hidden" accept=".pdf,.png,.jpg,.jpeg,.json,.eml" />
+          </label>
+        </div>
+      </div>
+
+      <!-- Human-in-the-Loop High-Value Spend Escalation Banner -->
+      <div id="drawer-hitl-banner" class="hidden p-4 rounded-xl border border-amber-300 bg-amber-50/90 shadow-2xs">
+        <div class="flex items-start gap-2.5">
+          <span class="text-base">⚠️</span>
+          <div class="flex-1">
+            <h4 class="text-xs font-bold text-amber-900">Task Suspended: Human-in-the-Loop Approval Required</h4>
+            <p class="text-[11px] text-amber-800 mt-0.5" id="hitl-question-text">High spend transaction exceeds policy threshold ($10,000).</p>
+            <p class="text-[10px] text-amber-700/80 font-mono mt-0.5" id="hitl-reason-text"></p>
+            
+            <div class="mt-3 flex items-center gap-2">
+              <button onclick="approveHitlTask()" id="hitl-approve-btn" class="px-3 py-1.5 bg-gray-900 hover:bg-black text-white font-semibold rounded-md shadow-2xs text-xs flex items-center gap-1 active:scale-95">
+                <span>✓</span> Approve & Resume
+              </button>
+              <button onclick="rejectHitlTask()" id="hitl-reject-btn" class="px-3 py-1.5 bg-white hover:bg-red-50 text-red-700 border border-red-200 font-semibold rounded-md shadow-2xs text-xs active:scale-95">
+                Reject & Halt
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Zero-Trust Query-Back Verification Matrix -->
+      <div id="drawer-verification-section" class="hidden space-y-3">
+        <div class="flex items-center justify-between pb-1 border-b border-gray-100">
+          <div class="flex items-center space-x-1.5">
+            <span class="text-emerald-600 font-bold">❖</span>
+            <span class="text-xs font-bold text-gray-900">Query-Back Verification Matrix</span>
+          </div>
+          <span id="verification-status-badge" class="px-2 py-0.2 rounded text-[10px] font-semibold bg-[#f2f7f4] text-[#2f523e] border border-[#d5e5db]">VERIFIED PASS</span>
+        </div>
+
+        <div class="bg-white border border-[#e5e2da] rounded-xl overflow-hidden shadow-2xs">
+          <table class="min-w-full divide-y divide-gray-100 text-xs">
+            <thead class="bg-gray-50 text-[10px] font-semibold text-gray-500 uppercase tracking-wider">
+              <tr>
+                <th class="px-3 py-2 text-left">Target Check</th>
+                <th class="px-3 py-2 text-left">Expected</th>
+                <th class="px-3 py-2 text-left">Queried DB</th>
+                <th class="px-3 py-2 text-right">Status</th>
+              </tr>
+            </thead>
+            <tbody id="drawer-verification-tbody" class="divide-y divide-gray-100 font-mono">
+              <!-- Dynamically populated verification checks -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Cryptographic SHA-256 Provenance Block Badge -->
+        <div class="p-2.5 rounded-lg bg-stone-50 border border-stone-200 flex items-center justify-between">
+          <div class="min-w-0 flex-1">
+            <span class="text-[9px] uppercase tracking-wider text-stone-400 font-bold block">Cryptographic Audit Ledger Hash</span>
+            <span id="drawer-block-hash" class="font-mono text-[10px] text-stone-700 truncate block select-all">genesis</span>
+          </div>
+          <button type="button" id="drawer-copy-hash-btn" onclick="copyBlockHash()" class="ml-2 px-2 py-1 bg-white border border-stone-200 hover:bg-stone-50 rounded text-[10px] font-medium text-stone-600 shadow-2xs flex-shrink-0 transition-colors">
+            Copy
+          </button>
+        </div>
+      </div>
+
+      <!-- Live Execution Step Stream -->
+      <div>
+        <div class="flex items-center justify-between pb-2">
+          <span class="text-xs font-bold text-gray-900">Execution Feed</span>
+          <span id="drawer-step-feed-count" class="text-[10px] font-mono text-gray-400">0 steps logged</span>
+        </div>
+
+        <div id="drawer-step-feed" class="space-y-2.5">
+          <!-- Step cards will stream in here -->
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Drawer Footer -->
+    <div class="px-6 py-3 border-t border-[#e5e2da] bg-[#faf9f6] flex items-center justify-between text-xs flex-shrink-0">
+      <div class="flex items-center space-x-2">
+        <span class="text-stone-400 text-[11px]">Runtime:</span>
+        <span id="drawer-total-runtime" class="font-mono font-semibold text-stone-700">0.0s</span>
+      </div>
+      <div class="flex items-center gap-2">
+        <button type="button" onclick="switchView('table'); closeAiDrawer();" class="px-3 py-1.5 bg-white border border-gray-300 hover:bg-gray-50 text-gray-700 font-semibold rounded-md text-xs shadow-2xs">
+          View in Ledger
+        </button>
+        <button type="button" onclick="closeAiDrawer()" class="px-3 py-1.5 bg-gray-900 hover:bg-black text-white font-semibold rounded-md text-xs shadow-2xs">
+          Done
+        </button>
+      </div>
+    </div>
+  </aside>
 
   <!-- ========================================== -->
   <!-- 5. APPLICATION JAVASCRIPT CONTROLLER       -->
@@ -960,8 +1220,11 @@
         if (sumEl) sumEl.innerText = '$' + config.total.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
         if (container) {
-          container.innerHTML = config.items.map(card => `
-            <div class="opportunity-card" id="deal-card-${card.id}" 
+          container.innerHTML = config.items.map(card => {
+            const isNew = card.isLiveErp && newlyAddedInvoiceIds.has(parseInt(card.id.replace('erp-', '')));
+            const newAnimClass = isNew ? 'ring-2 ring-amber-400 bg-amber-50/50 shadow-md' : '';
+            return `
+            <div class="opportunity-card ${newAnimClass}" id="deal-card-${card.id}" 
                  draggable="true" 
                  ondragstart="handleDragStart(event, '${card.id}')"
                  ondragend="handleDragEnd(event)"
@@ -987,10 +1250,15 @@
                 ${card.isLiveErp ? '<span class="text-[9px] font-medium text-stone-600 bg-stone-100 px-1 py-0.5 rounded border border-stone-200">ERP LIVE</span>' : ''}
               </div>
             </div>
-          `).join('');
+          `;
+          }).join('');
         }
       });
     }
+
+    let knownInvoiceIds = new Set();
+    let newlyAddedInvoiceIds = new Set();
+    let isInitialInvoiceLoad = true;
 
     // Fetch live ERP records & render into table
     async function fetchInvoices() {
@@ -998,8 +1266,29 @@
         const res = await fetch('/invoices');
         if (res.ok) {
           liveInvoices = await res.json();
+
+          if (!isInitialInvoiceLoad) {
+            liveInvoices.forEach(inv => {
+              if (!knownInvoiceIds.has(inv.id)) {
+                newlyAddedInvoiceIds.add(inv.id);
+              }
+            });
+          } else {
+            isInitialInvoiceLoad = false;
+          }
+
+          knownInvoiceIds = new Set(liveInvoices.map(inv => inv.id));
+
           renderInvoicesTable(liveInvoices);
           renderKanbanBoard();
+
+          if (newlyAddedInvoiceIds.size > 0) {
+            setTimeout(() => {
+              newlyAddedInvoiceIds.clear();
+              renderInvoicesTable(liveInvoices);
+              renderKanbanBoard();
+            }, 4500);
+          }
         }
       } catch (err) {
         console.error("Failed to fetch invoices:", err);
@@ -1019,7 +1308,10 @@
       invoices.forEach(inv => {
         const tr = document.createElement('tr');
         tr.setAttribute('data-invoice-id', inv.id);
-        tr.className = 'hover:bg-gray-50';
+        const isNew = newlyAddedInvoiceIds.has(inv.id);
+        tr.className = isNew
+          ? 'bg-amber-50/60 border-l-2 border-amber-500 hover:bg-amber-50 transition-colors duration-700'
+          : 'hover:bg-gray-50 transition-colors';
         
         let statusBadge = '<span class="px-2 py-0.5 rounded text-[11px] font-medium bg-stone-100 text-stone-600 border border-stone-200">' + escapeHtml(inv.status) + '</span>';
         if (inv.status === 'approved' || inv.status === 'settled' || inv.status === 'verified') {
@@ -1366,6 +1658,730 @@
       if (accountMenu && !accountMenu.classList.contains('hidden')) {
         if (!accountMenu.contains(e.target) && !accountTrigger.contains(e.target)) {
           accountMenu.classList.add('hidden');
+        }
+      }
+    });
+
+    // =========================================================================
+    // IN-APP AI WORKER CONTROLLER & REAL-TIME STREAMING
+    // =========================================================================
+    let currentWorkerTaskId = null;
+    let currentWorkerEventSource = null;
+    let attachedUploadPath = null;
+    let workerStartTime = null;
+    let workerTimerInterval = null;
+    let workerLoggedSteps = 0;
+
+    const SCENARIOS = {
+      clean: "Process invoice demo/invoices/invoice_globex_002.json into the ERP system.",
+      pdf: "Process the PDF invoice at demo/invoices/invoice_cyberdyne_005.pdf into the ERP system.",
+      malformed: "Process invoice demo/invoices/invoice_malformed_003.json into the ERP system.",
+      highvalue: "Process invoice demo/invoices/invoice_highvalue_004.json into our ERP system.",
+      custom_pdf: "Add this PDF invoice into our ERP system."
+    };
+
+    function dispatchScenario(key) {
+      const taskText = SCENARIOS[key];
+      if (!taskText) return;
+      document.getElementById('ai-command-input').value = taskText;
+      submitWorkerTask(taskText, attachedUploadPath);
+    }
+
+    function handleCommandBarSubmit(e) {
+      if (e) e.preventDefault();
+      const inputEl = document.getElementById('ai-command-input');
+      const text = (inputEl?.value || '').trim();
+      if (!text) return;
+      submitWorkerTask(text, attachedUploadPath);
+    }
+
+    async function handleFileSelect(e) {
+      const file = e.target.files?.[0];
+      if (!file) return;
+
+      const formData = new FormData();
+      formData.append('file', file);
+
+      try {
+        const res = await fetch('/api/agent/upload', {
+          method: 'POST',
+          body: formData
+        });
+        if (!res.ok) {
+          const err = await res.json();
+          alert('Upload failed: ' + (err.detail || 'Unknown error'));
+          return;
+        }
+        const data = await res.json();
+        attachedUploadPath = data.file_path;
+
+        const badge = document.getElementById('ai-attached-file-badge');
+        const filenameSpan = document.getElementById('ai-attached-filename');
+        if (badge && filenameSpan) {
+          filenameSpan.textContent = data.filename;
+          badge.classList.remove('hidden');
+          badge.classList.add('flex');
+        }
+      } catch (err) {
+        console.error('File upload failed:', err);
+      }
+    }
+
+    function clearAttachedFile() {
+      attachedUploadPath = null;
+      const fileInput = document.getElementById('ai-file-input');
+      if (fileInput) fileInput.value = '';
+      const badge = document.getElementById('ai-attached-file-badge');
+      if (badge) {
+        badge.classList.add('hidden');
+        badge.classList.remove('flex');
+      }
+    }
+
+    function handleCommandCardDragOver(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      const card = document.getElementById('ai-command-card');
+      if (card) {
+        card.classList.add('border-amber-500', 'bg-amber-50/50', 'ring-2', 'ring-amber-200');
+      }
+    }
+
+    function handleCommandCardDragLeave(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      const card = document.getElementById('ai-command-card');
+      if (card) {
+        card.classList.remove('border-amber-500', 'bg-amber-50/50', 'ring-2', 'ring-amber-200');
+      }
+    }
+
+    async function handleCommandCardDrop(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      const card = document.getElementById('ai-command-card');
+      if (card) {
+        card.classList.remove('border-amber-500', 'bg-amber-50/50', 'ring-2', 'ring-amber-200');
+      }
+      const file = e.dataTransfer?.files?.[0];
+      if (file) {
+        const formData = new FormData();
+        formData.append('file', file);
+        try {
+          const res = await fetch('/api/agent/upload', { method: 'POST', body: formData });
+          if (res.ok) {
+            const data = await res.json();
+            attachedUploadPath = data.file_path;
+            const badge = document.getElementById('ai-attached-file-badge');
+            const filenameSpan = document.getElementById('ai-attached-filename');
+            if (badge && filenameSpan) {
+              filenameSpan.textContent = data.filename;
+              badge.classList.remove('hidden');
+              badge.classList.add('flex');
+            }
+            const inputEl = document.getElementById('ai-command-input');
+            if (inputEl && !inputEl.value) {
+              inputEl.value = `Process the uploaded invoice document ${data.filename} into the ERP system.`;
+            }
+          }
+        } catch (err) {
+          console.error('Command bar drop upload failed:', err);
+        }
+      }
+    }
+
+    async function submitWorkerTask(taskText, filePath) {
+      openAiDrawer();
+      resetDrawerUI(taskText);
+
+      try {
+        const res = await fetch('/api/agent/dispatch', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ task: taskText, file_path: filePath })
+        });
+        if (!res.ok) {
+          const err = await res.json();
+          setDrawerStatus('FAILED', 'bg-red-500');
+          appendFailedCard({ error: err.detail || 'Dispatch failed' });
+          return;
+        }
+        const data = await res.json();
+        currentWorkerTaskId = data.task_id;
+        document.getElementById('drawer-task-id').textContent = currentWorkerTaskId;
+
+        // Clear input & attached file
+        const inputEl = document.getElementById('ai-command-input');
+        if (inputEl) inputEl.value = '';
+        clearAttachedFile();
+
+        // Start SSE stream
+        connectWorkerEventStream(currentWorkerTaskId);
+      } catch (err) {
+        console.error('Failed to dispatch worker task:', err);
+      }
+    }
+
+    function openAiDrawer() {
+      const drawer = document.getElementById('ai-drawer');
+      const backdrop = document.getElementById('ai-drawer-backdrop');
+      if (drawer) {
+        drawer.classList.remove('translate-x-full');
+        drawer.classList.add('translate-x-0');
+      }
+      if (backdrop) {
+        backdrop.classList.remove('hidden');
+      }
+    }
+
+    function closeAiDrawer() {
+      const drawer = document.getElementById('ai-drawer');
+      const backdrop = document.getElementById('ai-drawer-backdrop');
+      if (drawer) {
+        drawer.classList.add('translate-x-full');
+        drawer.classList.remove('translate-x-0');
+      }
+      if (backdrop) {
+        backdrop.classList.add('hidden');
+      }
+    }
+
+    function resetDrawerUI(taskText) {
+      document.getElementById('drawer-goal-text').textContent = taskText;
+      document.getElementById('drawer-task-id').textContent = 'task_starting...';
+      document.getElementById('drawer-step-feed').innerHTML = '';
+      document.getElementById('drawer-step-feed-count').textContent = '0 steps logged';
+      document.getElementById('drawer-hitl-banner').classList.add('hidden');
+      document.getElementById('drawer-dropzone').classList.add('hidden');
+      document.getElementById('drawer-verification-section').classList.add('hidden');
+      
+      workerLoggedSteps = 0;
+      workerStartTime = Date.now();
+      if (workerTimerInterval) clearInterval(workerTimerInterval);
+      workerTimerInterval = setInterval(() => {
+        const sec = ((Date.now() - workerStartTime) / 1000).toFixed(1);
+        const runtimeEl = document.getElementById('drawer-total-runtime');
+        if (runtimeEl) runtimeEl.textContent = `${sec}s`;
+      }, 100);
+
+      setDrawerStatus('STARTING', 'bg-amber-500');
+      updateStepper(1);
+    }
+
+    function setDrawerStatus(label, dotColorClass) {
+      const textEl = document.getElementById('drawer-status-text');
+      const dotEl = document.getElementById('drawer-status-dot');
+      if (textEl) textEl.textContent = label;
+      if (dotEl) {
+        dotEl.className = `w-2 h-2 rounded-full ${dotColorClass || 'bg-amber-500'} animate-pulse`;
+      }
+    }
+
+    function updateStepper(stageNum) {
+      const counterEl = document.getElementById('drawer-step-counter');
+      if (counterEl) counterEl.textContent = `Stage ${Math.min(stageNum, 5)} of 5`;
+
+      for (let i = 1; i <= 5; i++) {
+        const node = document.getElementById(`step-node-${i}`);
+        if (!node) continue;
+        const ring = node.querySelector('.step-ring');
+        const label = node.querySelector('.step-label');
+
+        if (i < stageNum) {
+          // Completed
+          node.className = 'step-node flex flex-col items-center text-center p-1.5 rounded-lg border border-[#d5e5db] bg-[#f2f7f4] transition-all';
+          if (ring) {
+            ring.className = 'step-ring w-4 h-4 rounded-full border border-emerald-600 bg-emerald-600 text-white text-[9px] flex items-center justify-center font-bold';
+            ring.innerHTML = '✓';
+          }
+          if (label) label.className = 'step-label text-[10px] font-semibold text-[#2f523e] mt-1';
+        } else if (i === stageNum) {
+          // Active
+          node.className = 'step-node flex flex-col items-center text-center p-1.5 rounded-lg border border-amber-300 bg-amber-50/80 transition-all';
+          if (ring) {
+            ring.className = 'step-ring w-4 h-4 rounded-full border-2 border-amber-600 bg-amber-600 text-white text-[9px] flex items-center justify-center font-bold animate-pulse';
+            ring.textContent = i;
+          }
+          if (label) label.className = 'step-label text-[10px] font-semibold text-amber-900 mt-1';
+        } else {
+          // Pending
+          node.className = 'step-node flex flex-col items-center text-center p-1.5 rounded-lg border border-stone-200 bg-white transition-all';
+          if (ring) {
+            ring.className = 'step-ring w-4 h-4 rounded-full border border-stone-300 text-stone-400 text-[9px] flex items-center justify-center font-bold';
+            ring.textContent = i;
+          }
+          if (label) label.className = 'step-label text-[10px] text-stone-500 mt-1';
+        }
+      }
+    }
+
+    function connectWorkerEventStream(taskId) {
+      if (currentWorkerEventSource) {
+        currentWorkerEventSource.close();
+      }
+
+      currentWorkerEventSource = new EventSource(`/api/agent/tasks/${taskId}/events`);
+
+      currentWorkerEventSource.onmessage = (event) => {
+        if (!event.data || event.data.trim() === '') return;
+        try {
+          const ev = JSON.parse(event.data);
+          handleStreamEvent(ev);
+        } catch (e) {
+          console.warn('Error parsing SSE event:', e);
+        }
+      };
+
+      currentWorkerEventSource.onerror = () => {
+        // SSE closed by server or network issue
+      };
+    }
+
+    function handleStreamEvent(ev) {
+      const type = ev.type;
+
+      if (type === 'STATE_CHANGE') {
+        const toState = ev.to_state;
+        if (toState === 'UNDERSTANDING') {
+          setDrawerStatus('UNDERSTANDING', 'bg-blue-500');
+          updateStepper(1);
+        } else if (toState === 'PLANNING') {
+          setDrawerStatus('PLANNING', 'bg-amber-500');
+          updateStepper(1);
+        } else if (toState === 'EXECUTING') {
+          setDrawerStatus('EXECUTING', 'bg-indigo-500');
+          updateStepper(2);
+        } else if (toState === 'OBSERVING') {
+          setDrawerStatus('OBSERVING', 'bg-purple-500');
+          updateStepper(3);
+        } else if (toState === 'ESCALATED') {
+          setDrawerStatus('ESCALATED', 'bg-red-500');
+          updateStepper(3);
+        } else if (toState === 'ADAPTING') {
+          setDrawerStatus('SELF-HEALING', 'bg-amber-600');
+          updateStepper(2);
+        } else if (toState === 'VERIFYING') {
+          setDrawerStatus('VERIFYING', 'bg-cyan-500');
+          updateStepper(5);
+        } else if (toState === 'COMPLETED') {
+          setDrawerStatus('COMPLETED', 'bg-emerald-500');
+          updateStepper(6);
+        } else if (toState === 'FAILED') {
+          setDrawerStatus('FAILED', 'bg-red-500');
+        }
+      } else if (type === 'PLAN_CREATED') {
+        appendPlanCard(ev);
+      } else if (type === 'STEP_START') {
+        const tool = (ev.tool_name || '').toLowerCase();
+        const desc = (ev.description || '').toLowerCase();
+        if (tool.includes('extractor') || tool.includes('parser') || desc.includes('extract') || desc.includes('parse')) {
+          updateStepper(2);
+        } else if (tool.includes('policy') || desc.includes('policy') || desc.includes('threshold') || desc.includes('rule')) {
+          updateStepper(3);
+        } else if (tool.includes('erp') || tool.includes('browser') || desc.includes('erp') || desc.includes('insert') || desc.includes('mutate')) {
+          updateStepper(4);
+        } else if (tool.includes('verify') || desc.includes('verif') || desc.includes('query-back')) {
+          updateStepper(5);
+        }
+        appendStepStartCard(ev);
+      } else if (type === 'STEP_COMPLETE') {
+        updateStepCompleteCard(ev);
+      } else if (type === 'INPUT_REQUIRED') {
+        setDrawerStatus('AWAITING INPUT', 'bg-amber-500');
+        const dropzone = document.getElementById('drawer-dropzone');
+        if (dropzone) {
+          dropzone.classList.remove('hidden');
+          const promptEl = document.getElementById('drawer-dropzone-prompt');
+          if (promptEl && ev.prompt) promptEl.textContent = ev.prompt;
+        }
+      } else if (type === 'INPUT_RECEIVED') {
+        const dropzone = document.getElementById('drawer-dropzone');
+        if (dropzone) dropzone.classList.add('hidden');
+        setDrawerStatus('INGESTING PDF', 'bg-blue-500');
+      } else if (type === 'ESCALATION_TRIGGERED') {
+        setDrawerStatus('ESCALATION', 'bg-red-500');
+        updateStepper(3);
+        const banner = document.getElementById('drawer-hitl-banner');
+        if (banner) {
+          banner.classList.remove('hidden');
+          const qEl = document.getElementById('hitl-question-text');
+          const rEl = document.getElementById('hitl-reason-text');
+          if (qEl) qEl.textContent = ev.question || 'High spend transaction exceeds policy threshold ($10,000).';
+          if (rEl) {
+            let reasonStr = `Reason: ${ev.reason || 'High-value transaction'}`;
+            if (ev.context && ev.context.amount) {
+              reasonStr += ` • Spend Amount: $${Number(ev.context.amount).toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
+            }
+            if (ev.context && ev.context.threshold) {
+              reasonStr += ` (Policy Threshold: $${Number(ev.context.threshold).toLocaleString('en-US', { minimumFractionDigits: 2 })})`;
+            }
+            rEl.textContent = reasonStr;
+          }
+        }
+      } else if (type === 'ESCALATION_RESOLVED') {
+        const banner = document.getElementById('drawer-hitl-banner');
+        if (banner) banner.classList.add('hidden');
+      } else if (type === 'VERIFICATION_REPORT') {
+        updateStepper(5);
+        renderVerificationSection(ev);
+      } else if (type === 'TASK_COMPLETED') {
+        setDrawerStatus('COMPLETED', 'bg-emerald-500');
+        updateStepper(6);
+        if (workerTimerInterval) clearInterval(workerTimerInterval);
+        if (currentWorkerEventSource) currentWorkerEventSource.close();
+        
+        appendCompletedSummaryCard(ev);
+        // Reactive auto-refresh of table & kanban
+        fetchInvoices();
+        showToast('✓ AI Worker successfully executed task and verified state in system of record.', 'success');
+      } else if (type === 'TASK_FAILED') {
+        setDrawerStatus('FAILED', 'bg-red-500');
+        if (workerTimerInterval) clearInterval(workerTimerInterval);
+        if (currentWorkerEventSource) currentWorkerEventSource.close();
+        appendFailedCard(ev);
+      }
+    }
+
+    function appendPlanCard(ev) {
+      const feed = document.getElementById('drawer-step-feed');
+      if (!feed) return;
+      const card = document.createElement('div');
+      card.className = 'p-3 rounded-xl bg-stone-50 border border-stone-200 text-xs space-y-1.5';
+      const stepsHtml = (ev.steps || []).map(s => `
+        <div class="flex items-center gap-2 text-[11px] text-stone-700">
+          <span class="w-4 h-4 rounded-full bg-stone-200 text-stone-700 text-[9px] flex items-center justify-center font-mono font-bold flex-shrink-0">${s.step_number}</span>
+          <span class="truncate flex-1 font-medium">${escapeHtml(s.description)}</span>
+          <span class="text-[10px] font-mono px-1.5 py-0.2 bg-white rounded border border-stone-200 text-stone-500">${escapeHtml(s.tool_name)}</span>
+        </div>
+      `).join('');
+
+      card.innerHTML = `
+        <div class="flex items-center justify-between text-stone-900 font-semibold text-[11px]">
+          <span>📋 ${ev.is_replan ? 'Autonomous Self-Heal Action Plan' : 'Synthesized Action Plan'}</span>
+          <span class="font-mono text-[10px] text-stone-500">${(ev.steps || []).length} steps</span>
+        </div>
+        <div class="space-y-1 pt-1 border-t border-stone-200/60">
+          ${stepsHtml}
+        </div>
+      `;
+      feed.appendChild(card);
+      feed.scrollTop = feed.scrollHeight;
+    }
+
+    function appendStepStartCard(ev) {
+      workerLoggedSteps++;
+      document.getElementById('drawer-step-feed-count').textContent = `${workerLoggedSteps} steps logged`;
+
+      const feed = document.getElementById('drawer-step-feed');
+      if (!feed) return;
+
+      const card = document.createElement('div');
+      card.id = `step-card-${ev.step_number}`;
+      card.className = 'p-3 rounded-xl bg-white border border-[#e5e2da] shadow-2xs text-xs space-y-1.5 transition-all';
+      
+      card.innerHTML = `
+        <div class="flex items-center justify-between">
+          <div class="flex items-center space-x-2">
+            <span class="w-4 h-4 rounded-full bg-stone-100 border border-stone-300 text-stone-600 text-[10px] flex items-center justify-center font-mono font-bold">${ev.step_number}</span>
+            <span class="font-semibold text-gray-900 text-xs">${escapeHtml(ev.description || 'Executing step')}</span>
+          </div>
+          <span class="tool-badge px-2 py-0.5 rounded text-[10px] font-mono bg-stone-100 text-stone-700 border border-stone-200">${escapeHtml(ev.tool_name)}</span>
+        </div>
+        <div class="step-status-row flex items-center justify-between text-[11px] text-stone-500 pt-1">
+          <span class="flex items-center gap-1.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+            <span>Running...</span>
+          </span>
+          <span class="step-duration font-mono text-[10px]">—</span>
+        </div>
+      `;
+      feed.appendChild(card);
+      feed.scrollTop = feed.scrollHeight;
+    }
+
+    function updateStepCompleteCard(ev) {
+      const card = document.getElementById(`step-card-${ev.step_number}`);
+      if (!card) return;
+
+      const statusRow = card.querySelector('.step-status-row');
+      const durationSpan = card.querySelector('.step-duration');
+
+      if (durationSpan) {
+        durationSpan.textContent = `${Number(ev.duration_ms || 0).toFixed(0)}ms`;
+      }
+
+      if (statusRow) {
+        if (ev.success) {
+          statusRow.innerHTML = `
+            <span class="flex items-center gap-1.5 text-[#2f523e]">
+              <span class="text-xs font-bold">✓</span>
+              <span class="font-medium">Success</span>
+            </span>
+            <span class="step-duration font-mono text-[10px] text-stone-500">${Number(ev.duration_ms || 0).toFixed(0)}ms</span>
+          `;
+        } else {
+          statusRow.innerHTML = `
+            <span class="flex items-center gap-1.5 text-red-600">
+              <span class="text-xs font-bold">&times;</span>
+              <span class="font-medium">Failed: ${escapeHtml(ev.error_message || 'Tool error')}</span>
+            </span>
+            <span class="step-duration font-mono text-[10px] text-stone-500">${Number(ev.duration_ms || 0).toFixed(0)}ms</span>
+          `;
+        }
+      }
+
+      // If output data contains extracted invoice fields, render clean preview
+      if (ev.output_data && typeof ev.output_data === 'object') {
+        const out = ev.output_data;
+        if (out.vendor_name || out.invoice_number || out.amount) {
+          const previewDiv = document.createElement('div');
+          previewDiv.className = 'mt-2 p-2 rounded-lg bg-stone-50 border border-stone-200 text-[11px] font-mono grid grid-cols-3 gap-2';
+          previewDiv.innerHTML = `
+            <div>
+              <span class="text-[9px] text-stone-400 uppercase block">Vendor</span>
+              <span class="text-stone-900 font-semibold truncate block">${escapeHtml(out.vendor_name || '—')}</span>
+            </div>
+            <div>
+              <span class="text-[9px] text-stone-400 uppercase block">Invoice #</span>
+              <span class="text-stone-700 block">${escapeHtml(out.invoice_number || '—')}</span>
+            </div>
+            <div>
+              <span class="text-[9px] text-stone-400 uppercase block">Amount</span>
+              <span class="text-stone-900 font-bold block">$${Number(out.amount || 0).toLocaleString('en-US', { minimumFractionDigits: 2 })}</span>
+            </div>
+          `;
+          card.appendChild(previewDiv);
+        }
+
+        // Collapsible JSON entity preview for comprehensive auditability
+        const jsonDetails = document.createElement('details');
+        jsonDetails.className = 'mt-2 text-[10px] font-mono group';
+        jsonDetails.innerHTML = `
+          <summary class="cursor-pointer text-stone-400 hover:text-stone-700 select-none flex items-center gap-1 transition-colors">
+            <span class="inline-block transition-transform group-open:rotate-90">▸</span>
+            <span>Inspect step payload</span>
+          </summary>
+          <pre class="mt-1.5 p-2 bg-stone-50 rounded-md border border-stone-200 overflow-x-auto text-[10px] text-stone-700 leading-tight max-h-44 overflow-y-auto">${escapeHtml(JSON.stringify(out, null, 2))}</pre>
+        `;
+        card.appendChild(jsonDetails);
+      }
+    }
+
+    function renderVerificationSection(ev) {
+      const sec = document.getElementById('drawer-verification-section');
+      if (!sec) return;
+      sec.classList.remove('hidden');
+
+      const badge = document.getElementById('verification-status-badge');
+      if (badge) {
+        if (ev.passed) {
+          badge.className = 'px-2 py-0.5 rounded text-[10px] font-semibold bg-[#f2f7f4] text-[#2f523e] border border-[#d5e5db]';
+          badge.textContent = 'VERIFIED PASS ✓';
+        } else {
+          badge.className = 'px-2 py-0.5 rounded text-[10px] font-semibold bg-[#faf4f4] text-[#5c3535] border border-[#eddcdc]';
+          badge.textContent = 'VERIFICATION FAILED ✕';
+        }
+      }
+
+      const tbody = document.getElementById('drawer-verification-tbody');
+      if (tbody) {
+        tbody.innerHTML = '';
+        (ev.checks || []).forEach(c => {
+          const tr = document.createElement('tr');
+          const isMatch = Boolean(c.matched);
+          tr.innerHTML = `
+            <td class="px-3 py-2 text-stone-800 font-medium">${escapeHtml(c.target)}</td>
+            <td class="px-3 py-2 text-stone-600">${escapeHtml(String(c.expected))}</td>
+            <td class="px-3 py-2 text-stone-900 font-bold">${escapeHtml(String(c.actual))}</td>
+            <td class="px-3 py-2 text-right">
+              ${isMatch 
+                ? '<span class="px-1.5 py-0.2 rounded text-[10px] font-semibold bg-[#f2f7f4] text-[#2f523e] border border-[#d5e5db]">MATCH ✓</span>'
+                : '<span class="px-1.5 py-0.2 rounded text-[10px] font-semibold bg-[#faf4f4] text-[#5c3535] border border-[#eddcdc]">FAIL ✕</span>'
+              }
+            </td>
+          `;
+          tbody.appendChild(tr);
+        });
+      }
+
+      const hashEl = document.getElementById('drawer-block-hash');
+      if (hashEl && ev.block_hash) {
+        hashEl.textContent = ev.block_hash;
+      }
+    }
+
+    function appendCompletedSummaryCard(ev) {
+      const feed = document.getElementById('drawer-step-feed');
+      if (!feed) return;
+
+      const card = document.createElement('div');
+      card.className = 'p-3.5 rounded-xl bg-[#f2f7f4] border border-[#d5e5db] text-xs text-[#2f523e] space-y-1.5 shadow-2xs';
+      card.innerHTML = `
+        <div class="flex items-center justify-between font-bold text-xs">
+          <span>✓ Task Execution Completed</span>
+          <span class="font-mono text-[11px]">${Number(ev.duration_ms || 0).toFixed(0)}ms</span>
+        </div>
+        <p class="text-[11px] leading-relaxed text-[#2f523e]">${escapeHtml(ev.summary || 'Task completed successfully.')}</p>
+      `;
+      feed.appendChild(card);
+      feed.scrollTop = feed.scrollHeight;
+    }
+
+    function appendFailedCard(ev) {
+      const feed = document.getElementById('drawer-step-feed');
+      if (!feed) return;
+
+      const card = document.createElement('div');
+      card.className = 'p-3.5 rounded-xl bg-[#faf4f4] border border-[#eddcdc] text-xs text-[#5c3535] space-y-1.5';
+      card.innerHTML = `
+        <div class="flex items-center justify-between font-bold text-xs">
+          <span>✕ Task Execution Failed</span>
+        </div>
+        <p class="text-[11px] leading-relaxed text-[#5c3535]">${escapeHtml(ev.error || ev.summary || 'An error occurred during execution.')}</p>
+      `;
+      feed.appendChild(card);
+      feed.scrollTop = feed.scrollHeight;
+    }
+
+    function handleDropzoneDragOver(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      const el = document.getElementById('drawer-dropzone');
+      if (el) {
+        el.classList.add('border-amber-500', 'bg-amber-100/70', 'scale-[1.01]');
+      }
+    }
+
+    function handleDropzoneDragLeave(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      const el = document.getElementById('drawer-dropzone');
+      if (el) {
+        el.classList.remove('border-amber-500', 'bg-amber-100/70', 'scale-[1.01]');
+      }
+    }
+
+    async function handleDropzoneDrop(e) {
+      e.preventDefault();
+      e.stopPropagation();
+      const el = document.getElementById('drawer-dropzone');
+      if (el) {
+        el.classList.remove('border-amber-500', 'bg-amber-100/70', 'scale-[1.01]');
+      }
+      const file = e.dataTransfer?.files?.[0];
+      if (file) {
+        await uploadAndSubmitDrawerFile(file);
+      }
+    }
+
+    async function handleDrawerFileSelect(e) {
+      const file = e.target.files?.[0];
+      if (!file) return;
+      await uploadAndSubmitDrawerFile(file);
+    }
+
+    async function uploadAndSubmitDrawerFile(file) {
+      if (!file || !currentWorkerTaskId) return;
+
+      const sizeStr = file.size < 1024 * 1024 
+        ? `${(file.size / 1024).toFixed(1)} KB` 
+        : `${(file.size / (1024 * 1024)).toFixed(2)} MB`;
+
+      const statusEl = document.getElementById('drawer-dropzone-status');
+      if (statusEl) {
+        statusEl.textContent = `Uploading and auto-ingesting ${file.name} (${sizeStr})...`;
+        statusEl.classList.remove('hidden');
+      }
+
+      const formData = new FormData();
+      formData.append('file', file);
+
+      try {
+        const uploadRes = await fetch('/api/agent/upload', {
+          method: 'POST',
+          body: formData
+        });
+        if (!uploadRes.ok) {
+          const err = await uploadRes.json();
+          alert('Upload failed: ' + (err.detail || 'Unknown error'));
+          if (statusEl) statusEl.classList.add('hidden');
+          return;
+        }
+        const data = await uploadRes.json();
+        
+        // Feed into waiting agent task
+        await fetch(`/api/agent/tasks/${currentWorkerTaskId}/input`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ file_path: data.file_path })
+        });
+
+        document.getElementById('drawer-dropzone').classList.add('hidden');
+        if (statusEl) statusEl.classList.add('hidden');
+        setDrawerStatus('INGESTING PDF', 'bg-blue-500');
+      } catch (err) {
+        console.error('Drawer file upload failed:', err);
+        if (statusEl) statusEl.classList.add('hidden');
+      }
+    }
+
+    async function approveHitlTask() {
+      if (!currentWorkerTaskId) return;
+      try {
+        await fetch(`/api/agent/tasks/${currentWorkerTaskId}/approve`, { method: 'POST' });
+        document.getElementById('drawer-hitl-banner').classList.add('hidden');
+        setDrawerStatus('EXECUTING (APPROVED)', 'bg-emerald-500');
+      } catch (err) {
+        console.error('Approval failed:', err);
+      }
+    }
+
+    async function rejectHitlTask() {
+      if (!currentWorkerTaskId) return;
+      try {
+        await fetch(`/api/agent/tasks/${currentWorkerTaskId}/reject`, { method: 'POST' });
+        document.getElementById('drawer-hitl-banner').classList.add('hidden');
+        setDrawerStatus('HALTED (REJECTED)', 'bg-red-500');
+      } catch (err) {
+        console.error('Rejection failed:', err);
+      }
+    }
+
+    function copyTaskId() {
+      const el = document.getElementById('drawer-task-id');
+      if (!el) return;
+      navigator.clipboard.writeText(el.textContent.trim()).then(() => {
+        showToast('✓ Task ID copied to clipboard.', 'success');
+      });
+    }
+
+    function copyBlockHash() {
+      const hashEl = document.getElementById('drawer-block-hash');
+      const copyBtn = document.getElementById('drawer-copy-hash-btn');
+      if (!hashEl) return;
+      navigator.clipboard.writeText(hashEl.textContent.trim()).then(() => {
+        showToast('✓ Cryptographic Block Hash copied to clipboard.', 'success');
+        if (copyBtn) {
+          const orig = copyBtn.textContent;
+          copyBtn.textContent = 'Copied! ✓';
+          setTimeout(() => { copyBtn.textContent = orig; }, 2000);
+        }
+      });
+    }
+
+    // Keyboard Shortcut (Ctrl+J or Cmd+J to focus AI Worker Command Bar)
+    document.addEventListener('keydown', (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'j') {
+        e.preventDefault();
+        const input = document.getElementById('ai-command-input');
+        if (input) {
+          input.focus();
+          input.select();
+        }
+      } else if (e.key === 'Escape') {
+        const drawer = document.getElementById('ai-drawer');
+        if (drawer && !drawer.classList.contains('translate-x-full')) {
+          closeAiDrawer();
         }
       }
     });

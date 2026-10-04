@@ -243,3 +243,126 @@ def test_scenario_9_worker_service_job_queue(tmp_path):
     assert job.status == "PENDING"
     assert "Acme" in job.task
 
+
+def test_scenario_10_in_app_dispatch_and_streaming():
+    from httpx import ASGITransport, AsyncClient
+
+    async def _run():
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+            dispatch_resp = await ac.post(
+                "/api/agent/dispatch",
+                json={"task": "Process invoice demo/invoices/invoice_globex_002.json into the ERP system."},
+            )
+            assert dispatch_resp.status_code == 200
+            task_id = dispatch_resp.json()["task_id"]
+
+            for _ in range(30):
+                await asyncio.sleep(0.5)
+                status_resp = await ac.get(f"/api/agent/tasks/{task_id}")
+                task_info = status_resp.json()
+                if task_info["status"] in ["COMPLETED", "FAILED"]:
+                    break
+
+            assert task_info["status"] == "COMPLETED"
+            event_types = [ev.get("type") for ev in task_info["events"]]
+            assert "STATE_CHANGE" in event_types
+            assert "TASK_COMPLETED" in event_types
+
+    asyncio.run(_run())
+
+
+def test_scenario_11_dynamic_pdf_upload_and_ingestion():
+    import io
+    from httpx import ASGITransport, AsyncClient
+
+    async def _run():
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+            # 1. Dispatch prompt without file
+            dispatch_resp = await ac.post(
+                "/api/agent/dispatch",
+                json={"task": "Add this PDF invoice into our ERP system."},
+            )
+            assert dispatch_resp.status_code == 200
+            task_id = dispatch_resp.json()["task_id"]
+
+            # Wait for PENDING_INPUT
+            for _ in range(20):
+                await asyncio.sleep(0.3)
+                status_resp = await ac.get(f"/api/agent/tasks/{task_id}")
+                task_info = status_resp.json()
+                if task_info["status"] == "PENDING_INPUT":
+                    break
+
+            assert task_info["status"] == "PENDING_INPUT"
+
+            # 2. Upload file via /api/agent/upload
+            with open("demo/invoices/invoice_globex_002.json", "rb") as f:
+                files = {"file": ("invoice_globex_002.json", f.read(), "application/json")}
+            upload_resp = await ac.post("/api/agent/upload", files=files)
+            assert upload_resp.status_code == 200
+            uploaded_path = upload_resp.json()["file_path"]
+
+            # 3. Provide uploaded file path
+            input_resp = await ac.post(
+                f"/api/agent/tasks/{task_id}/input",
+                json={"file_path": uploaded_path},
+            )
+            assert input_resp.status_code == 200
+
+            # 4. Wait for completion
+            for _ in range(30):
+                await asyncio.sleep(0.5)
+                status_resp = await ac.get(f"/api/agent/tasks/{task_id}")
+                task_info = status_resp.json()
+                if task_info["status"] in ["COMPLETED", "FAILED"]:
+                    break
+
+            assert task_info["status"] == "COMPLETED"
+
+            # 5. Check database has Globex invoice
+            inv_resp = await ac.get("/invoices")
+            vendors = [inv["vendor_name"] for inv in inv_resp.json()]
+            assert "Globex Corporation" in vendors
+
+    asyncio.run(_run())
+
+
+def test_scenario_12_in_app_hitl_approval_flow():
+    from httpx import ASGITransport, AsyncClient
+
+    async def _run():
+        async with AsyncClient(transport=ASGITransport(app=app), base_url="http://test") as ac:
+            dispatch_resp = await ac.post(
+                "/api/agent/dispatch",
+                json={"task": "Process invoice demo/invoices/invoice_highvalue_004.json into our ERP system."},
+            )
+            assert dispatch_resp.status_code == 200
+            task_id = dispatch_resp.json()["task_id"]
+
+            # Wait for PENDING_APPROVAL
+            for _ in range(30):
+                await asyncio.sleep(0.5)
+                status_resp = await ac.get(f"/api/agent/tasks/{task_id}")
+                task_info = status_resp.json()
+                if task_info["status"] == "PENDING_APPROVAL":
+                    break
+
+            assert task_info["status"] == "PENDING_APPROVAL"
+
+            # Approve via API
+            approve_resp = await ac.post(f"/api/agent/tasks/{task_id}/approve")
+            assert approve_resp.status_code == 200
+
+            # Wait for completion
+            for _ in range(30):
+                await asyncio.sleep(0.5)
+                status_resp = await ac.get(f"/api/agent/tasks/{task_id}")
+                task_info = status_resp.json()
+                if task_info["status"] in ["COMPLETED", "FAILED"]:
+                    break
+
+            assert task_info["status"] == "COMPLETED"
+
+    asyncio.run(_run())
+
+
