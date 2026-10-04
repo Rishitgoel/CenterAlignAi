@@ -83,7 +83,7 @@ flowchart TD
 ### 2. Installation
 ```bash
 # Clone the repository
-git clone https://github.com/your-username/CenterAlignAi.git
+git clone https://github.com/Rishitgoel/CenterAlignAi.git
 cd CenterAlignAi
 
 # Install dependencies
