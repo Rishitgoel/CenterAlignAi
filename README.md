@@ -5,7 +5,7 @@
 [![Playwright](https://img.shields.io/badge/Browser-Playwright%20Chromium-45ba4b.svg)](https://playwright.dev/)
 [![Gemini 3.8 Flash](https://img.shields.io/badge/Model-Gemini%203.8%20Flash-4285F4.svg)](https://ai.google.dev/)
 [![Security: SOC2 Audit Hash](https://img.shields.io/badge/Audit-SHA--256%20Chained-orange.svg)]()
-[![Tests: 9 Passed](https://img.shields.io/badge/Tests-9%20Passed-success.svg)]()
+[![Tests: 27 Passed](https://img.shields.io/badge/Tests-27%20Passed-success.svg)]()
 
 An enterprise-ready **Autonomous AI Task Worker / Company Operator** that takes natural language company instructions and autonomously completes them using tool orchestration, browser UI automation, multimodal document ingestion, closed-loop state verification, self-correcting error recovery, human-in-the-loop governance, and tamper-evident cryptographic audit logs.
 
@@ -165,12 +165,12 @@ python -m benchmarks.eval_suite
 
 ## 🧪 Automated Test Suite
 
-Run all 9 automated scenarios:
+Run all 27 automated tests across the 3 test suites:
 ```bash
 pytest tests/ -v
 ```
 
-Test Scenarios Covered:
+### End-to-End Scenarios (`tests/test_scenarios.py` — 12 Scenarios)
 1. `test_scenario_1_happy_path`: Standard end-to-end invoice processing and verification.
 2. `test_scenario_2_error_recovery`: Autonomous recovery from malformed syntax using regex heuristics.
 3. `test_scenario_3_human_escalation_detection`: Governance threshold detection for high-value spend ($75,000).
@@ -180,6 +180,19 @@ Test Scenarios Covered:
 7. `test_scenario_7_cryptographic_audit_ledger`: SHA-256 hash-chain verification and tamper detection.
 8. `test_scenario_8_credential_vault_redaction`: Masking of API tokens and passwords in prompt contexts and logs.
 9. `test_scenario_9_worker_service_job_queue`: Asynchronous task submission, job state persistence, and worker retrieval.
+10. `test_scenario_10_in_app_dispatch_and_streaming`: Dispatching tasks via REST API with live Server-Sent Events (SSE) streaming.
+11. `test_scenario_11_dynamic_pdf_upload_and_ingestion`: On-demand document upload intake when user prompts without an existing file path.
+12. `test_scenario_12_in_app_hitl_approval_flow`: In-portal approval resolution for suspended tasks exceeding spend limits.
+
+### In-App Portal & API Integration Suite (`tests/test_in_app_dispatch.py` — 5 Tests)
+- `test_dispatch_and_polling`: Validates task creation, background execution, and polling endpoint.
+- `test_hitl_approval_endpoint`: Validates task suspension at spend gate and resume upon approval webhook.
+- `test_upload_and_dynamic_intake_flow`: Validates file upload endpoint and agent intake prompt resumption.
+- `test_sse_event_stream`: Validates real-time event streaming via SSE.
+- `test_audit_ledger_endpoint`: Validates retrieval and SHA-256 integrity verification of the compliance audit trail.
+
+### Query Parser & Intent Understanding Suite (`tests/test_query_parser.py` — 10 Tests)
+- Validates deterministic parsing, model cascade order (Gemini Flash Lite -> Flash -> Flash Lite -> Heuristics), date math, CRM deal pipeline stage updates, browser automation intent detection, and filter views.
 
 ---
 
