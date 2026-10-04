@@ -1,3 +1,4 @@
+import asyncio
 import json
 import re
 from typing import Any, Dict, List, Optional
@@ -56,7 +57,7 @@ class Planner:
     ) -> TaskPlan:
         client = self._get_client()
 
-        # If LLM client is available, plan using Gemini 3.8 Flash
+        # If LLM client is available, plan using Gemini Flash with strict timeout
         if client:
             try:
                 user_prompt = (
@@ -65,14 +66,17 @@ class Planner:
                     f"USER TASK:\n{task}\n\n"
                     "Generate the optimal TaskPlan JSON:"
                 )
-                interaction = client.interactions.create(
-                    model="gemini-3.8-flash",
-                    input=f"{PLANNER_SYSTEM_PROMPT}\n\n{user_prompt}",
+                response = await asyncio.wait_for(
+                    client.aio.models.generate_content(
+                        model="gemini-3.5-flash-lite",
+                        contents=f"{PLANNER_SYSTEM_PROMPT}\n\n{user_prompt}",
+                    ),
+                    timeout=5.0,
                 )
-                raw_text = interaction.output_text or ""
+                raw_text = response.text or ""
                 return self._parse_plan_json(raw_text, fallback_task=task)
-            except Exception as e:
-                # Fallback to deterministic heuristic plan if API is unavailable or rate-limited
+            except Exception:
+                # Fallback to deterministic heuristic plan if API is unavailable, rate-limited, or times out
                 pass
 
         # Deterministic heuristic plan generator (guarantees zero-dependency operation)
@@ -98,11 +102,14 @@ class Planner:
                     f"MEMORY CONTEXT:\n{memory.get_context_summary()}\n\n"
                     "Formulate a corrected, recovered TaskPlan JSON that overcomes this failure:"
                 )
-                interaction = client.interactions.create(
-                    model="gemini-3.8-flash",
-                    input=f"{REPLANNER_SYSTEM_PROMPT}\n\n{prompt}",
+                response = await asyncio.wait_for(
+                    client.aio.models.generate_content(
+                        model="gemini-3.5-flash-lite",
+                        contents=f"{REPLANNER_SYSTEM_PROMPT}\n\n{prompt}",
+                    ),
+                    timeout=5.0,
                 )
-                raw_text = interaction.output_text or ""
+                raw_text = response.text or ""
                 return self._parse_plan_json(raw_text, fallback_task=original_plan.goal)
             except Exception:
                 pass

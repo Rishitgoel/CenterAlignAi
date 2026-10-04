@@ -30,9 +30,19 @@ _server_thread = None
 def setup_module():
     global _server_thread
     asyncio.run(init_db())
-    _server_thread = ServerThread()
-    _server_thread.start()
-    time.sleep(1.5)  # Wait for uvicorn to bind
+    # Only spawn background server if not already running on port 8000
+    import socket
+    is_running = False
+    try:
+        with socket.create_connection(("127.0.0.1", 8000), timeout=0.5):
+            is_running = True
+    except OSError:
+        is_running = False
+
+    if not is_running:
+        _server_thread = ServerThread()
+        _server_thread.start()
+        time.sleep(1.5)  # Wait for uvicorn to bind
 
 
 def teardown_module():

@@ -15,22 +15,82 @@
     /* Collapsible Sidebar Styles */
     .sidebar {
       width: 256px;
+      flex-shrink: 0;
       transition: width 0.2s cubic-bezier(0.4, 0, 0.2, 1);
       background-color: var(--bg-sidebar);
       border-right: 1px solid var(--border-sidebar);
     }
     .sidebar.collapsed {
-      width: 64px;
+      width: 60px;
+      padding-left: 8px !important;
+      padding-right: 8px !important;
     }
     .sidebar.collapsed .sidebar-text,
     .sidebar.collapsed .sidebar-section-title,
     .sidebar.collapsed .sidebar-hide-collapsed {
       display: none !important;
     }
+    .sidebar.collapsed .sidebar-header {
+      flex-direction: column !important;
+      align-items: center !important;
+      gap: 6px !important;
+      padding-bottom: 8px !important;
+    }
+    .sidebar.collapsed .sidebar-header-left {
+      margin-right: 0 !important;
+      width: 100% !important;
+      display: flex !important;
+      justify-content: center !important;
+    }
+    .sidebar.collapsed .sidebar-header-controls {
+      width: 100% !important;
+      display: flex !important;
+      justify-content: center !important;
+    }
+    .sidebar.collapsed #account-menu-trigger {
+      justify-content: center !important;
+      width: 38px !important;
+      height: 38px !important;
+      padding: 0 !important;
+      border-radius: 8px !important;
+      margin: 0 auto !important;
+      overflow: visible !important;
+    }
+    .sidebar.collapsed #account-menu-trigger > * + * {
+      margin-left: 0 !important;
+    }
+    .sidebar.collapsed #account-menu-trigger .avatar-badge {
+      width: 28px !important;
+      height: 28px !important;
+      font-size: 11px !important;
+      font-weight: 700 !important;
+      flex-shrink: 0 !important;
+      border-radius: 50% !important;
+    }
+    .sidebar.collapsed #sidebar-collapse-btn {
+      width: 38px !important;
+      height: 28px !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      border-radius: 6px !important;
+      margin: 0 auto !important;
+    }
+    .sidebar.collapsed #account-menu {
+      left: 56px !important;
+      top: 0px !important;
+    }
     .sidebar.collapsed .nav-item {
-      justify-content: center;
-      padding-left: 0;
-      padding-right: 0;
+      justify-content: center !important;
+      width: 42px !important;
+      height: 38px !important;
+      padding: 0 !important;
+      margin: 0 auto 4px auto !important;
+    }
+    .sidebar.collapsed .sidebar-footer-inner {
+      justify-content: center !important;
+      padding-left: 0 !important;
+      padding-right: 0 !important;
     }
 
     /* Navigation Item States */
@@ -147,27 +207,30 @@
     <!-- 1. LEFT COLLAPSIBLE SIDEBAR                -->
     <!-- ========================================== -->
     <aside id="app-sidebar" class="sidebar flex flex-col justify-between p-3 select-none">
-      <div>
+      <div class="flex flex-col flex-1 min-w-0">
         <!-- Account Switcher & Collapse Controls -->
-        <div class="flex items-center justify-between pb-3 mb-2 border-b border-gray-200 relative">
-          <div class="relative flex-1 mr-2">
-            <button id="account-menu-trigger" onclick="toggleAccountMenu()" class="flex items-center space-x-2 overflow-hidden hover:bg-gray-100 p-1 rounded-md transition-colors text-left w-full">
-              <span class="avatar-badge text-xs">RG</span>
-              <div class="sidebar-text truncate">
-                <div class="text-xs font-bold text-gray-900 flex items-center gap-1">
-                  Rishit Goel
-                  <svg class="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
+        <div class="sidebar-header flex items-center justify-between pb-3 mb-3 border-b border-gray-200 relative">
+          <!-- Profile Trigger & Popover -->
+          <div class="sidebar-header-left relative flex-1 min-w-0 mr-1">
+            <button id="account-menu-trigger" onclick="toggleAccountMenu()" class="flex items-center space-x-2 hover:bg-gray-100 p-1.5 rounded-md transition-colors text-left w-full" title="Rishit Goel (Account Menu)">
+              <span class="avatar-badge text-xs flex-shrink-0">RG</span>
+              <div class="sidebar-text truncate min-w-0">
+                <div class="text-xs font-bold text-gray-900 flex items-center gap-1 truncate">
+                  <span class="truncate">Rishit Goel</span>
+                  <svg class="w-3 h-3 text-gray-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
                 </div>
               </div>
             </button>
+
             <!-- Account Switcher Dropdown Popover -->
-            <div id="account-menu" class="hidden absolute left-0 top-10 w-60 bg-white border border-gray-200 rounded-xl shadow-xl py-2 z-50 text-xs">
+            <div id="account-menu" class="hidden absolute left-0 top-11 w-56 bg-white border border-gray-200 rounded-xl shadow-xl py-2 z-50 text-xs">
               <div class="px-3 py-2 border-b border-gray-100">
                 <p class="font-bold text-gray-900">Rishit Goel</p>
                 <p class="text-[11px] text-gray-500 font-mono">rishit.goel@centralign.ai</p>
                 <span class="inline-flex items-center gap-1 mt-1 text-[10px] font-medium text-stone-600 bg-stone-100 px-1.5 py-0.5 rounded border border-stone-200">
                   <span class="w-1.5 h-1.5 rounded-full bg-stone-400"></span> Active Operator
                 </span>
+              </div>
               <div class="pt-1">
                 <a href="/docs" target="_blank" class="block px-3 py-1.5 hover:bg-gray-50 text-gray-600 flex items-center justify-between">
                   <span>API Documentation</span>
@@ -177,29 +240,30 @@
             </div>
           </div>
 
-          <div class="flex items-center space-x-1">
-            <button onclick="toggleSidebarSearch()" class="p-1 rounded text-gray-400 hover:text-gray-700 hover:bg-gray-100 sidebar-hide-collapsed" title="Quick Search (Ctrl+K)">
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+          <!-- Controls: Collapse Sidebar Button -->
+          <div class="sidebar-header-controls flex items-center space-x-0.5 flex-shrink-0">
+            <button onclick="toggleSidebarSearch()" class="p-1.5 rounded text-gray-400 hover:text-gray-700 hover:bg-gray-100 sidebar-hide-collapsed" title="Quick Search (Ctrl+K)">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
             </button>
-            <button onclick="toggleSidebar()" class="p-1 rounded text-gray-400 hover:text-gray-700 hover:bg-gray-100" title="Toggle Sidebar">
-              <svg id="sidebar-collapse-icon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7"/></svg>
+            <button id="sidebar-collapse-btn" onclick="toggleSidebar()" class="p-1.5 rounded text-gray-400 hover:text-gray-700 hover:bg-gray-100" title="Toggle Sidebar">
+              <svg id="sidebar-collapse-icon" class="w-3.5 h-3.5 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7"/></svg>
             </button>
           </div>
         </div>
 
         <!-- Workspace Navigation (100% Functional) -->
         <div class="mb-4">
-          <div class="sidebar-section-title px-3 py-1 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
+          <div class="sidebar-section-title px-2.5 py-1 text-[11px] font-semibold text-gray-400 uppercase tracking-wider">
             <span>Workspace</span>
           </div>
-          <nav class="space-y-0.5 mt-1">
-            <button type="button" onclick="switchView('kanban')" class="nav-item w-full text-left active" id="nav-opportunities">
-              <svg class="w-4 h-4 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
-              <span class="sidebar-text">Opportunities</span>
+          <nav class="space-y-1 mt-1">
+            <button type="button" onclick="switchView('kanban')" class="nav-item w-full text-left active" id="nav-opportunities" title="Opportunities">
+              <svg class="w-4 h-4 text-gray-700 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+              <span class="sidebar-text truncate">Opportunities</span>
             </button>
-            <button type="button" onclick="switchView('table')" class="nav-item w-full text-left" id="nav-accounts">
-              <svg class="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-              <span class="sidebar-text">Invoices Ledger</span>
+            <button type="button" onclick="switchView('table')" class="nav-item w-full text-left" id="nav-accounts" title="Invoices Ledger">
+              <svg class="w-4 h-4 text-gray-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+              <span class="sidebar-text truncate">Invoices Ledger</span>
             </button>
           </nav>
         </div>
@@ -207,9 +271,9 @@
 
       <!-- Sidebar Footer: System Status -->
       <div class="pt-3 border-t border-gray-200">
-        <div class="flex items-center space-x-2 px-2 py-1">
-          <span class="w-2 h-2 rounded-full bg-stone-400"></span>
-          <span class="sidebar-text text-[11px] font-medium text-stone-500">CentrAlign AI · System Active</span>
+        <div class="sidebar-footer-inner flex items-center space-x-2 px-2 py-1" title="CentrAlign AI · System Active">
+          <span class="w-2 h-2 rounded-full bg-stone-400 flex-shrink-0"></span>
+          <span class="sidebar-text text-[11px] font-medium text-stone-500 truncate">CentrAlign AI · System Active</span>
         </div>
       </div>
     </aside>
@@ -718,17 +782,26 @@
     let currentActiveStageForModal = 'qualification';
 
     // Sidebar state & localStorage persistence
+    function updateSidebarCollapseIcon(isCollapsed) {
+      const icon = document.getElementById('sidebar-collapse-icon');
+      if (icon) {
+        icon.style.transform = isCollapsed ? 'rotate(180deg)' : '';
+      }
+    }
+
     function initSidebar() {
       const isCollapsed = localStorage.getItem('sidebar_collapsed') === 'true';
       if (isCollapsed) {
         document.getElementById('app-sidebar').classList.add('collapsed');
+        updateSidebarCollapseIcon(true);
       }
     }
 
     function toggleSidebar() {
       const sidebar = document.getElementById('app-sidebar');
-      sidebar.classList.toggle('collapsed');
-      localStorage.setItem('sidebar_collapsed', sidebar.classList.contains('collapsed'));
+      const isCollapsed = sidebar.classList.toggle('collapsed');
+      localStorage.setItem('sidebar_collapsed', isCollapsed);
+      updateSidebarCollapseIcon(isCollapsed);
     }
 
     function toggleSidebarSearch() {

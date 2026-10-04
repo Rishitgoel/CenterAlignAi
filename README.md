@@ -277,6 +277,91 @@ CenterAlignAi/
 
 ---
 
+## 💡 Important Technical & Design Decisions
+
+1. **Explicit Hierarchical State Machine vs. Unconstrained ReAct Loops**:
+   - *Decision*: Rather than letting an LLM loop freely without boundaries, we built an explicit 8-state machine (`IDLE` ➔ `UNDERSTANDING` ➔ `PLANNING` ➔ `EXECUTING` ➔ `OBSERVING` ➔ `ADAPTING` ➔ `VERIFYING` ➔ `COMPLETED`).
+   - *Rationale*: Enterprise tasks require predictable guardrails, clear step transitions, deterministic retry budgets, and precise compliance auditing. An explicit state machine prevents hallucinated infinite loops and enables auditable enterprise governance.
+
+2. **The "Query-Back" Verification Pattern (Zero-Trust Validation)**:
+   - *Decision*: The agent never assumes success simply because an API call returned HTTP 200 or an LLM said "I did it". Instead, the `Verifier` independently queries the ERP database (`GET /invoices/{id}`), asserts field-level mathematical and string equality, and checks disk report existence and DOM screenshot proof.
+   - *Rationale*: Hallucinated success is the #1 failure mode of autonomous agents in production. Query-Back verification ensures verifiable ground truth before closing any task.
+
+3. **Dual-Mode Planning & Resilient Fallbacks**:
+   - *Decision*: Google Gemini Flash plans the task dynamically. However, if the API key is missing, network is offline, or quota is exhausted (429), the planner seamlessly falls back within 5 seconds to a deterministic heuristic engine.
+   - *Rationale*: Business-critical automation cannot grind to a halt because of external API latency or cloud outages. The worker is 100% functional both online and fully air-gapped.
+
+4. **Persistent Asynchronous Human-in-the-Loop Governance**:
+   - *Decision*: When high-risk thresholds are exceeded (invoices > $10,000), execution doesn't abort or block an active worker thread. It serializes the task state to disk (`logs/suspended_tasks/`), pushes an approval ticket to the live Web Operator Portal (`/portal`), and safely resumes once approved.
+   - *Rationale*: Real enterprise employees don't hold synchronous command prompts open for hours waiting for manager approval. Asynchronous queue suspension mirrors real-world corporate workflows.
+
+5. **Runtime Zero-Code OpenAPI Tool Synthesizer**:
+   - *Decision*: Ingests arbitrary OpenAPI v3 / Swagger schemas at runtime (`tools/openapi_loader.py`) and dynamically binds them into callable tools with schema validation.
+   - *Rationale*: Maximizes generalization. The agent can adapt to any new microservice or third-party CRM without requiring custom Python wrappers.
+
+6. **Cryptographic SHA-256 Merkle-Chained Audit Ledger**:
+   - *Decision*: Every state transition, tool execution, human decision, and verification check is hashed with SHA-256 into an append-only JSONL ledger where each block points to the previous block's hash.
+   - *Rationale*: Delivers tamper-evident SOC2 / ISO 27001 regulatory compliance. Any manual alteration of past execution records is mathematically detected by `verify_ledger_integrity()`.
+
+---
+
+## ⚠️ Known Limitations
+
+1. **Single-Node Task Queue**: Current job suspension and worker scheduling uses disk-backed JSON file persistence (`logs/suspended_tasks/` and `logs/jobs/`) rather than a distributed broker like Redis, RabbitMQ, or Temporal.
+2. **DOM-Level Web Interaction**: Browser automation uses Playwright for web apps with standard HTML DOM elements, modals, and forms. It does not currently use low-level OS mouse/keyboard coordinate models for non-web desktop applications (e.g. legacy Windows desktop ERPs).
+3. **Free-Tier Gemini API Quota**: When running under free Gemini API tiers with strict RPM/RPD limits, extended bursts can trigger 429 rate limits. The system handles this gracefully via an async 5-second timeout and instant heuristic fallback.
+4. **Document Extraction Layouts**: Highly irregular, un-templated physical paper scans with severe tilt or noise rely on Gemini's multimodal vision model; very complex multi-page tables may require dedicated OCR pipelines.
+
+---
+
+## 🔮 What We Would Build Next (Future Roadmap)
+
+If given additional time, our immediate roadmap includes:
+1. **OS-Level Computer Use & Native Desktop Automation**:
+   - Integrate multimodal screen capture + mouse coordinate action models (e.g. Anthropic / Gemini Computer Use APIs) to navigate legacy native desktop ERP software (SAP GUI, Oracle Desktop) alongside web applications.
+2. **Temporal.io / Distributed Orchestration Engine**:
+   - Upgrade the current background worker into a durable distributed state machine using Temporal.io or Celery + Redis, enabling multi-machine execution, automatic checkpoint recovery across node crashes, and multi-tenant worker pools.
+3. **Cross-Session Memory & Vendor Vector Knowledge Base**:
+   - Implement long-term vector memory (ChromaDB / pgvector) to store vendor-specific nuances discovered over time (e.g., "Vendor X puts their tax ID in the notes field" or "Vendor Y's invoices always arrive under a different company name").
+4. **Interactive Natural Language Operator Collaboration**:
+   - Enhance the Web Portal HITL Queue with an interactive chat window allowing human operators to give mid-flight corrections or clarifying instructions to suspended tasks (e.g., "This invoice has a 10% discount, apply it before submitting").
+
+---
+
+## 📐 Assumptions Made While Building
+
+1. **Simulated Corporate System-of-Record**: We assumed an internal company ERP/CRM accessible via both modern REST API endpoints and a web browser portal (`http://127.0.0.1:8000/portal`).
+2. **Financial Spend Risk Threshold**: We assumed any financial commitment over $10,000 represents critical operational risk that requires dual-control human authorization.
+3. **Input Imperfection**: We assumed real enterprise invoices arrive in messy, heterogeneous formats (corrupted JSON, raw vendor email threads, scanned PDFs) and that autonomous workers must handle syntax defects without human intervention.
+4. **Zero-Dependency Resilience**: We assumed production agents must never hard-crash if external cloud LLM APIs experience downtime; local deterministic fallback logic is mandatory.
+
+---
+
+## 📦 Models, APIs, Frameworks & Pre-Built Components
+
+| Component | Technology | Role & Purpose |
+|---|---|---|
+| **Language Model** | Google Gemini 3.8 Flash / 2.5 Flash | High-level goal decomposition, multimodal PDF analysis, dynamic replanning |
+| **LLM SDK** | `google-genai` (v1.0+) | Official Google GenAI SDK for async model interaction |
+| **Browser Automation** | Playwright Chromium | Headless browser execution, web portal automation, screenshot proof |
+| **Mock ERP Backend** | FastAPI + Uvicorn | High-performance asynchronous REST API & Web Operator Portal |
+| **Database** | SQLite + `aiosqlite` | Asynchronous local database simulating company system-of-record |
+| **Data Validation** | Pydantic v2 & Pydantic-Settings | Strict typing for action plans, execution logs, and audit blocks |
+| **HTTP Client** | `httpx` | Async HTTP client for REST ERP interactions and health checks |
+| **PDF Extraction** | `pypdf` | Local text extraction fallback for PDF documents |
+| **CLI & UI** | Rich (`Console`, `Table`, `Panel`) | Real-time terminal state visualization, logs, and plan rendering |
+| **Audit Ledger** | Python `hashlib` (SHA-256) | Merkle-chained immutable cryptographic audit ledger |
+| **Containerization** | Docker & Docker Compose | Multi-container deployment for ERP portal and background worker |
+
+---
+
+## 🎥 Demo Video & Walkthrough
+
+- **Recorded Walkthrough**: [Link to Demo Video (YouTube / Loom) — *To be added by candidate*]
+- **Demo Script**: Follow the complete 2m45s narration script in [`docs/DEMO_SCRIPT.md`](docs/DEMO_SCRIPT.md).
+
+---
+
 ## 📄 License
 
 MIT License. Developed for CentrAlign AI.

@@ -62,7 +62,15 @@ class Executor:
             return [self._substitute_placeholders(item, facts) for item in data]
         elif isinstance(data, str):
             res = data
-            for k, v in facts.items():
+            # Expand facts with common alias variations (e.g. amount vs extracted_amount)
+            expanded_facts = dict(facts)
+            for k, v in list(facts.items()):
+                if not k.startswith("extracted_"):
+                    expanded_facts[f"extracted_{k}"] = v
+                else:
+                    expanded_facts[k.replace("extracted_", "")] = v
+
+            for k, v in expanded_facts.items():
                 token = f"{{{{{k}}}}}"
                 if token in res:
                     # If whole string is token, preserve native type

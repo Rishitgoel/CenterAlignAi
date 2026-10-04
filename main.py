@@ -19,8 +19,12 @@ def handle_run(args):
     print_banner()
     from agent.core import Agent
 
-    agent = Agent(interactive=not args.non_interactive)
-    asyncio.run(agent.run(args.task))
+    task = getattr(args, "task", None) or getattr(args, "task_pos", None)
+    if not task:
+        console.print("[bold red]Error: No task provided.[/bold red] Usage: python main.py run --task \"Your goal here\"")
+        sys.exit(1)
+    agent = Agent(interactive=not getattr(args, "non_interactive", False))
+    asyncio.run(agent.run(task))
 
 
 def handle_server(args):
@@ -39,6 +43,15 @@ def handle_server(args):
 
 
 def main():
+    # Convenience shortcut: If user invokes python main.py "task string" directly
+    if len(sys.argv) > 1 and sys.argv[1] not in ["run", "server", "-h", "--help"]:
+        task_str = sys.argv[1]
+        print_banner()
+        from agent.core import Agent
+        agent = Agent(interactive=True)
+        asyncio.run(agent.run(task_str))
+        return
+
     parser = argparse.ArgumentParser(
         description="Autonomous AI Task Worker Prototype for Enterprise Systems"
     )
@@ -46,7 +59,8 @@ def main():
 
     # Run subcommand
     run_parser = subparsers.add_parser("run", help="Run the autonomous agent on a natural language task")
-    run_parser.add_argument("--task", type=str, required=True, help="Natural language goal or task prompt")
+    run_parser.add_argument("task_pos", nargs="?", type=str, default=None, help="Natural language goal or task prompt")
+    run_parser.add_argument("--task", type=str, default=None, help="Natural language goal or task prompt")
     run_parser.add_argument("--non-interactive", action="store_true", default=False, help="Disable interactive approval prompt (auto-approve)")
 
     # Server subcommand

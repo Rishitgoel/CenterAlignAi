@@ -83,6 +83,9 @@ class Observer:
                 facts["browser_feedback"] = data["toast_feedback"]
             if "ui_status" in data:
                 facts["ui_status"] = data["ui_status"]
+            for field in ["vendor_name", "invoice_number", "amount", "due_date"]:
+                if field in data and data[field]:
+                    facts[field] = data[field]
 
         return Observation(
             status="success",

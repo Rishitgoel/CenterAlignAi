@@ -85,24 +85,29 @@ class DocumentExtractorTool(Tool):
         client = self._get_client()
         if client and suffix in [".pdf", ".png", ".jpg", ".jpeg", ".webp"]:
             try:
+                from google.genai import types
                 mime_type = "application/pdf" if suffix == ".pdf" else f"image/{suffix.lstrip('.')}"
                 file_bytes = path.read_bytes()
 
-                # Call Gemini 3.8 Flash with multimodal document bytes
-                interaction = client.interactions.create(
-                    model="gemini-3.8-flash",
-                    input=[
-                        {"type": "text", "text": DOCUMENT_PROMPT},
-                        {"type": "document", "data": base64.b64encode(file_bytes).decode("utf-8"), "mime_type": mime_type},
-                    ],
+                import asyncio
+                # Call Gemini with multimodal document bytes (async with 5s timeout)
+                response = await asyncio.wait_for(
+                    client.aio.models.generate_content(
+                        model="gemini-2.5-flash",
+                        contents=[
+                            types.Part.from_bytes(data=file_bytes, mime_type=mime_type),
+                            DOCUMENT_PROMPT,
+                        ],
+                    ),
+                    timeout=5.0,
                 )
-                raw_text = interaction.output_text or ""
+                raw_text = response.text or ""
                 parsed = self._clean_json(raw_text)
                 if parsed and parsed.get("vendor_name"):
                     return ToolResult(
                         success=True,
                         data=parsed,
-                        metadata={"file_path": str(path), "extractor": "gemini-3.8-flash", "multimodal": True},
+                        metadata={"file_path": str(path), "extractor": "gemini-2.5-flash", "multimodal": True},
                     )
             except Exception as e:
                 # Fallback to local heuristic extraction

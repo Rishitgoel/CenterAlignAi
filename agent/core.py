@@ -161,10 +161,15 @@ class Agent:
 
         if verification.passed:
             self._transition_state(AgentState.COMPLETED)
+            vendor = memory.get_fact("vendor_name") or "Vendor"
+            inv_num = memory.get_fact("invoice_number") or "N/A"
+            amt = float(memory.get_fact("amount", 0.0))
+            rec_id = memory.get_fact("created_invoice_id")
+            verif_proof = f"Verified in ERP under record ID #{rec_id}." if rec_id else "Verified in company portal with screenshot proof."
+
             summary = (
-                f"Successfully completed task. Processed invoice from '{memory.get_fact('vendor_name')}' "
-                f"({memory.get_fact('invoice_number')}) for ${float(memory.get_fact('amount', 0.0)):,.2f}. "
-                f"Verified in ERP under record ID #{memory.get_fact('created_invoice_id')}."
+                f"Successfully completed task. Processed invoice from '{vendor}' "
+                f"({inv_num}) for ${amt:,.2f}. {verif_proof}"
             )
             console.print(Panel(f"[bold green]SUCCESS:[/bold green] {summary}", title="Task Complete", border_style="green"))
             return self._finalize_log(
