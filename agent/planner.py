@@ -148,14 +148,100 @@ class Planner:
         """Deterministic enterprise workflow plan for invoice tasks."""
         # Detect target file path in task prompt (supporting json, csv, txt, pdf, eml)
         file_match = re.search(r"([\w/\\.-]+\.(?:json|csv|txt|pdf|eml|png|jpg))", task, re.IGNORECASE)
-        file_path = file_match.group(1) if file_match else "demo/invoices/invoice_acme_001.json"
+        
+        # Check if user explicitly requests browser / web portal interaction
+        use_browser = any(kw in task.lower() for kw in ["browser", "portal", "website", "web portal", "ui", "web form"])
+
+        if not file_match:
+            # Direct natural language instruction with parameters in prompt (no file)
+            vendor_match = re.search(r"(?:for|vendor|company)\s+([A-Z][A-Za-z0-9\s&]+?)(?:,|\swith|\samount|\sinvoice|\sdue|\sfor|\s\$|\.|$)", task, re.IGNORECASE)
+            vendor_name = vendor_match.group(1).strip() if vendor_match else "Wayne Enterprises"
+
+            amount_match = re.search(r"(?:amount(?:\sof|:|\s)?\s*\$?|\$)\s*([0-9]+(?:\.[0-9]+)?)", task, re.IGNORECASE)
+            amount = float(amount_match.group(1)) if amount_match else 2500.0
+
+            inv_match = re.search(r"(?:invoice(?:\s*(?:number|num|id|#))(?:\s*[:=]?\s*|\s+))([A-Za-z0-9-_]+)", task, re.IGNORECASE)
+            if not inv_match:
+                inv_match = re.search(r"\b(INV-[A-Za-z0-9-_]+|#[0-9]+)\b", task, re.IGNORECASE)
+            invoice_number = inv_match.group(1).replace("#", "").strip() if inv_match else f"INV-{abs(hash(task)) % 100000}"
+
+            date_match = re.search(r"(\d{4}-\d{2}-\d{2})", task)
+            due_date = date_match.group(1) if date_match else "2026-11-30"
+
+            if use_browser:
+                return TaskPlan(
+                    goal=task,
+                    steps=[
+                        PlannedStep(
+                            step_number=1,
+                            description=f"Navigate to company web portal and submit invoice for {vendor_name} (${amount:,.2f})",
+                            tool_name="browser_operator",
+                            tool_input={
+                                "action": "enter_invoice_form",
+                                "form_data": {
+                                    "vendor_name": vendor_name,
+                                    "invoice_number": invoice_number,
+                                    "amount": amount,
+                                    "due_date": due_date,
+                                    "notes": "Submitted directly via CentrAlign Autonomous Web Worker",
+                                },
+                                "headless": True,
+                                "screenshot_path": "logs/portal_submission_screenshot.png",
+                            },
+                            verification_hint="Verify modal submission and toast confirmation banner",
+                        ),
+                        PlannedStep(
+                            step_number=2,
+                            description="Write task audit trail and completion report",
+                            tool_name="file_writer",
+                            tool_input={
+                                "file_path": "logs/browser_task_completion_report.md",
+                                "content": f"Invoice entry completed via Playwright browser operator for {vendor_name} (Invoice #{invoice_number}). Amount: ${amount}.",
+                            },
+                            depends_on=1,
+                            verification_hint="Confirm completion report exists on disk",
+                        ),
+                    ],
+                )
+            else:
+                return TaskPlan(
+                    goal=task,
+                    steps=[
+                        PlannedStep(
+                            step_number=1,
+                            description=f"Enter invoice for {vendor_name} (${amount:,.2f}) into internal ERP system",
+                            tool_name="erp_client",
+                            tool_input={
+                                "action": "create_invoice",
+                                "invoice_data": {
+                                    "vendor_name": vendor_name,
+                                    "invoice_number": invoice_number,
+                                    "amount": amount,
+                                    "due_date": due_date,
+                                    "currency": "USD",
+                                },
+                            },
+                            verification_hint="Check response contains created invoice ID",
+                        ),
+                        PlannedStep(
+                            step_number=2,
+                            description="Write task audit trail and completion report",
+                            tool_name="file_writer",
+                            tool_input={
+                                "file_path": "logs/task_completion_report.md",
+                                "content": f"Invoice entry completed successfully for {vendor_name} (Invoice #{invoice_number}). Amount: ${amount}.",
+                            },
+                            depends_on=1,
+                            verification_hint="Confirm completion report exists on disk",
+                        ),
+                    ],
+                )
+
+        file_path = file_match.group(1)
 
         # Check if file requires multimodal document understanding
         is_multimodal = any(file_path.lower().endswith(ext) for ext in [".pdf", ".eml", ".png", ".jpg", ".jpeg"])
         extractor_tool = "document_extractor" if is_multimodal else "file_parser"
-
-        # Check if user explicitly requests browser / web portal interaction
-        use_browser = any(kw in task.lower() for kw in ["browser", "portal", "website", "web portal", "ui", "web form"])
 
         if use_browser:
             return TaskPlan(
