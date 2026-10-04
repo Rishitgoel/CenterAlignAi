@@ -290,10 +290,19 @@
         </div>
       </div>
 
-      <!-- Sidebar Footer: System Status -->
-      <div class="pt-3 border-t border-gray-200">
-        <div class="sidebar-footer-inner flex items-center space-x-2 px-2 py-1" title="CentrAlign AI · System Active">
-          <span class="w-2 h-2 rounded-full bg-stone-400 flex-shrink-0"></span>
+      <!-- Sidebar Footer: API Documentation & System Status (Bottom Left Corner) -->
+      <div class="pt-2.5 border-t border-gray-200 space-y-1">
+        <a href="/docs" target="_blank" class="nav-item w-full flex items-center justify-between text-gray-700 hover:text-gray-900 group" id="nav-api-docs" title="API Documentation (Swagger UI)">
+          <div class="flex items-center gap-2 min-w-0">
+            <svg class="w-4 h-4 text-gray-500 group-hover:text-gray-900 flex-shrink-0 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+            </svg>
+            <span class="sidebar-text truncate text-xs font-semibold">API Documentation</span>
+          </div>
+          <span class="sidebar-text text-[11px] text-gray-400 group-hover:text-gray-700 font-mono transition-colors">↗</span>
+        </a>
+        <div class="sidebar-footer-inner flex items-center space-x-2 px-2.5 py-1 text-gray-400" title="CentrAlign AI · System Active">
+          <span class="w-2 h-2 rounded-full bg-emerald-500 flex-shrink-0 animate-pulse"></span>
           <span class="sidebar-text text-[11px] font-medium text-stone-500 truncate">CentrAlign AI · System Active</span>
         </div>
       </div>
