@@ -1,5 +1,6 @@
 from tools.base import Tool, ToolResult
 from tools.browser_operator import BrowserOperatorTool
+from tools.document_extractor import DocumentExtractorTool
 from tools.erp_client import ERPClientTool
 from tools.file_parser import FileParserTool
 from tools.file_writer import FileWriterTool
@@ -12,6 +13,7 @@ def get_default_registry() -> ToolRegistry:
     registry.register(ERPClientTool())
     registry.register(FileWriterTool())
     registry.register(BrowserOperatorTool())
+    registry.register(DocumentExtractorTool())
     return registry
 
 
@@ -23,5 +25,6 @@ __all__ = [
     "ERPClientTool",
     "FileWriterTool",
     "BrowserOperatorTool",
+    "DocumentExtractorTool",
     "get_default_registry",
 ]

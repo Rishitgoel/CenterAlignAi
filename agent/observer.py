@@ -32,9 +32,9 @@ class Observer:
         facts: Dict[str, Any] = {}
         data = result.output_data
 
-        # 1. Inspect file parser output
-        if step.tool_name == "file_parser" and isinstance(data, dict):
-            for field in ["vendor_name", "invoice_number", "amount", "due_date", "currency"]:
+        # 1. Inspect file parser or document extractor output
+        if step.tool_name in ["file_parser", "document_extractor"] and isinstance(data, dict):
+            for field in ["vendor_name", "invoice_number", "amount", "due_date", "currency", "confidence_score"]:
                 if field in data:
                     facts[field] = data[field]
 

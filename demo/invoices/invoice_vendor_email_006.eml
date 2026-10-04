@@ -1,0 +1,24 @@
+From: "Cyberdyne Systems Billing" <billing@cyberdyne.example.com>
+To: "Accounts Payable" <ap@centraalign.internal>
+Date: Mon, 20 Jan 2025 09:14:22 -0800
+Subject: Invoice #CYBER-2025-441 - Cloud Infrastructure & Neural Core
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+
+Dear CentrAlign Accounts Payable,
+
+Please find attached the service invoice details for the billing period January 2025.
+
+Vendor: Cyberdyne Systems
+Invoice Number: CYBER-2025-441
+Due Date: 2025-02-28
+Amount: $5,400.00 USD
+
+Line Items:
+- Neural Network Inference Capacity: $3,200.00
+- High-Performance Enterprise Compute Cluster: $2,200.00
+
+Please remit payment in accordance with Net 30 terms.
+
+Thank you,
+Cyberdyne Financial Services

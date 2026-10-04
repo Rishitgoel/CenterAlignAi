@@ -109,3 +109,18 @@ def test_scenario_4_browser_ui_automation():
         assert log.evidence["erp_record"]["amount"] == 1500.0
 
     asyncio.run(_run())
+
+
+def test_scenario_5_multimodal_document_ingestion():
+    async def _run():
+        agent = Agent(interactive=False)
+        task = "Extract invoice information from vendor email demo/invoices/invoice_vendor_email_006.eml, enter it into our ERP system, and verify completion."
+        log = await agent.run(task)
+
+        assert log.final_state == AgentState.COMPLETED
+        assert "Cyberdyne Systems" in log.summary
+        assert "evidence" in log.model_dump()
+        assert "erp_record" in log.evidence
+        assert log.evidence["erp_record"]["amount"] == 5400.0
+
+    asyncio.run(_run())

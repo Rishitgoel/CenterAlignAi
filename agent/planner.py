@@ -128,9 +128,13 @@ class Planner:
 
     def _create_heuristic_plan(self, task: str) -> TaskPlan:
         """Deterministic enterprise workflow plan for invoice tasks."""
-        # Detect target file path in task prompt
-        file_match = re.search(r"([\w/\\.-]+\.(?:json|csv|txt))", task, re.IGNORECASE)
+        # Detect target file path in task prompt (supporting json, csv, txt, pdf, eml)
+        file_match = re.search(r"([\w/\\.-]+\.(?:json|csv|txt|pdf|eml|png|jpg))", task, re.IGNORECASE)
         file_path = file_match.group(1) if file_match else "demo/invoices/invoice_acme_001.json"
+
+        # Check if file requires multimodal document understanding
+        is_multimodal = any(file_path.lower().endswith(ext) for ext in [".pdf", ".eml", ".png", ".jpg", ".jpeg"])
+        extractor_tool = "document_extractor" if is_multimodal else "file_parser"
 
         # Check if user explicitly requests browser / web portal interaction
         use_browser = any(kw in task.lower() for kw in ["browser", "portal", "website", "web portal", "ui", "web form"])
@@ -141,9 +145,9 @@ class Planner:
                 steps=[
                     PlannedStep(
                         step_number=1,
-                        description=f"Parse invoice document from {file_path}",
-                        tool_name="file_parser",
-                        tool_input={"file_path": file_path, "format": "auto"},
+                        description=f"Extract invoice document data from {file_path}",
+                        tool_name=extractor_tool,
+                        tool_input={"file_path": file_path},
                         verification_hint="Verify vendor_name and amount are extracted",
                     ),
                     PlannedStep(
@@ -184,9 +188,9 @@ class Planner:
             steps=[
                 PlannedStep(
                     step_number=1,
-                    description=f"Parse invoice document from {file_path}",
-                    tool_name="file_parser",
-                    tool_input={"file_path": file_path, "format": "auto"},
+                    description=f"Extract invoice document data from {file_path}",
+                    tool_name=extractor_tool,
+                    tool_input={"file_path": file_path, "format": "auto"} if not is_multimodal else {"file_path": file_path},
                     verification_hint="Verify vendor_name and amount are extracted",
                 ),
                 PlannedStep(
