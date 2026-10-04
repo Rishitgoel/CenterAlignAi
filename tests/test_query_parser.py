@@ -41,3 +41,32 @@ def test_query_parser_model_cascade_order():
         "gemini-2.5-flash-lite",
         "gemini-3.5-flash-lite",
     ]
+
+
+def test_query_parser_crm_stage_movement():
+    parser = AIQueryParser(api_key=None)
+    query = "process tidewater to won state"
+    parsed = parser.parse_deterministic(query)
+
+    assert parsed.action == "move_crm_stage"
+    assert parsed.vendor_name == "Tidewater"
+    assert parsed.target_stage == "won"
+    assert parsed.amount == 27000.0
+    assert parsed.use_browser is True
+
+
+def test_planner_crm_stage_plan_generation():
+    from agent.planner import Planner
+    planner = Planner(api_key=None)
+    plan = planner._create_heuristic_plan("process tidewater to won state")
+
+    assert len(plan.steps) == 2
+    step_1 = plan.steps[0]
+    assert step_1.tool_name == "browser_operator"
+    assert step_1.tool_input["action"] == "move_opportunity_stage"
+    assert step_1.tool_input["company"] == "Tidewater"
+    assert step_1.tool_input["target_stage"] == "won"
+
+    step_2 = plan.steps[1]
+    assert step_2.tool_name == "file_writer"
+    assert "logs/task_completion_report.md" in step_2.tool_input["file_path"]

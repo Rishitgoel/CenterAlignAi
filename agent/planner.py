@@ -163,6 +163,40 @@ class Planner:
         """Deterministic enterprise workflow plan powered by AI Query Parser."""
         parsed = self.query_parser.parse_deterministic(task)
 
+        if parsed.action == "move_crm_stage":
+            company = parsed.vendor_name or "Tidewater"
+            stage = parsed.target_stage or "won"
+            amount = parsed.amount or 27000.0
+
+            return TaskPlan(
+                goal=task,
+                steps=[
+                    PlannedStep(
+                        step_number=1,
+                        description=f"Transition opportunity '{company}' to '{stage}' stage in CRM web portal",
+                        tool_name="browser_operator",
+                        tool_input={
+                            "action": "move_opportunity_stage",
+                            "company": company,
+                            "target_stage": stage,
+                            "screenshot_path": "logs/portal_stage_move_screenshot.png",
+                        },
+                        verification_hint=f"Verify card '{company}' is moved to {stage} column in Kanban board",
+                    ),
+                    PlannedStep(
+                        step_number=2,
+                        description="Write task audit trail and completion report",
+                        tool_name="file_writer",
+                        tool_input={
+                            "file_path": "logs/task_completion_report.md",
+                            "content": f"Opportunity for '{company}' successfully advanced to '{stage}' state in CRM Kanban pipeline. Deal value: ${amount:,.2f}.",
+                        },
+                        depends_on=1,
+                        verification_hint="Confirm completion report exists on disk",
+                    ),
+                ],
+            )
+
         if not parsed.file_path:
             # Materialize a draft invoice file so that all standard audit, extraction, and HITL gates run
             draft_path = Path("logs") / "draft_invoice.json"

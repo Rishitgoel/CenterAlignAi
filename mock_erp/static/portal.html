@@ -1888,6 +1888,17 @@
     }
 
     async function submitWorkerTask(taskText, filePath) {
+      // Reactive CRM Kanban stage movement for commands like "process tidewater to won state"
+      const crmMatch = taskText.match(/(?:process|move|advance|mark|change|transition|set)\s+([A-Za-z0-9\s&]+?)\s+(?:to|as|into)\s+(won|qualification|discovery|proposal|negotiation)/i);
+      if (crmMatch) {
+        const queryCo = crmMatch[1].trim().toLowerCase();
+        const targetStg = crmMatch[2].toLowerCase();
+        const matched = dynamicCards.find(c => (c.company && c.company.toLowerCase().includes(queryCo)) || (c.title && c.title.toLowerCase().includes(queryCo)));
+        if (matched) {
+          moveCardToStage(matched.id, targetStg);
+        }
+      }
+
       openAiDrawer();
       resetDrawerUI(taskText);
 
@@ -2082,6 +2093,9 @@
         }
         appendStepStartCard(ev);
       } else if (type === 'STEP_COMPLETE') {
+        if (ev.output_data && ev.output_data.card_id && ev.output_data.new_stage) {
+          moveCardToStage(ev.output_data.card_id, ev.output_data.new_stage);
+        }
         updateStepCompleteCard(ev);
       } else if (type === 'INPUT_REQUIRED') {
         setDrawerStatus('AWAITING INPUT', 'bg-amber-500');

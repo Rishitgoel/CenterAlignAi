@@ -182,7 +182,12 @@ class DocumentExtractorTool(Tool):
 
         # Regex heuristic extraction on extracted text
         vendor = "Cyberdyne Systems"
-        if "cyberdyne" in text_content.lower():
+        vendor_match = re.search(r"(?:vendor|company|from|supplier)\s*[:=]\s*([^\r\n,]+)", text_content, re.IGNORECASE)
+        if vendor_match:
+            vendor = vendor_match.group(1).strip()
+        elif "initech" in text_content.lower():
+            vendor = "Initech"
+        elif "cyberdyne" in text_content.lower():
             vendor = "Cyberdyne Systems"
         elif "acme" in text_content.lower():
             vendor = "Acme Corp"

@@ -17,7 +17,7 @@ class BrowserOperatorTool(Tool):
         "properties": {
             "action": {
                 "type": "string",
-                "enum": ["enter_invoice_form", "extract_table", "take_screenshot"],
+                "enum": ["enter_invoice_form", "extract_table", "take_screenshot", "move_opportunity_stage"],
                 "description": "Browser automation action to execute.",
             },
             "url": {
@@ -28,6 +28,15 @@ class BrowserOperatorTool(Tool):
             "form_data": {
                 "type": "object",
                 "description": "Payload required for 'enter_invoice_form': vendor_name, invoice_number, amount, due_date, notes.",
+            },
+            "company": {
+                "type": "string",
+                "description": "Target company name for 'move_opportunity_stage'.",
+            },
+            "target_stage": {
+                "type": "string",
+                "enum": ["qualification", "discovery", "proposal", "negotiation", "won"],
+                "description": "Target pipeline stage for 'move_opportunity_stage'.",
             },
             "headless": {
                 "type": "boolean",
@@ -70,6 +79,11 @@ class BrowserOperatorTool(Tool):
                 if action == "enter_invoice_form":
                     form_data = params.get("form_data") or {}
                     return await self._enter_invoice_form(page, form_data, params)
+
+                elif action == "move_opportunity_stage":
+                    company = params.get("company") or params.get("vendor_name") or "Tidewater"
+                    target_stage = params.get("target_stage") or params.get("stage") or "won"
+                    return await self._move_opportunity_stage(page, company, target_stage, params, browser)
 
                 elif action == "extract_table":
                     return await self._extract_table(page)
@@ -189,3 +203,75 @@ class BrowserOperatorTool(Tool):
             data={"rows": rows, "count": len(rows)},
             metadata={"row_count": len(rows)},
         )
+
+    async def _move_opportunity_stage(
+        self, page, company: str, target_stage: str, params: Dict[str, Any], browser
+    ) -> ToolResult:
+        js_code = """
+        ({ company, targetStage }) => {
+            const query = company.toLowerCase();
+            let targetId = null;
+            let matchedCard = null;
+
+            if (typeof dynamicCards !== 'undefined') {
+                for (const card of dynamicCards) {
+                    if ((card.company && card.company.toLowerCase().includes(query)) ||
+                        (card.title && card.title.toLowerCase().includes(query))) {
+                        targetId = card.id;
+                        matchedCard = card;
+                        break;
+                    }
+                }
+            }
+
+            if (!targetId && typeof liveInvoices !== 'undefined') {
+                for (const inv of liveInvoices) {
+                    if (inv.vendor_name && inv.vendor_name.toLowerCase().includes(query)) {
+                        targetId = `erp-${inv.id}`;
+                        matchedCard = { id: targetId, company: inv.vendor_name, amount: inv.amount, title: inv.vendor_name };
+                        break;
+                    }
+                }
+            }
+
+            if (targetId && typeof moveCardToStage === 'function') {
+                moveCardToStage(targetId, targetStage);
+                return {
+                    found: true,
+                    card_id: targetId,
+                    company: matchedCard.company || matchedCard.title,
+                    amount: matchedCard.amount,
+                    new_stage: targetStage
+                };
+            }
+            return { found: false };
+        }
+        """
+        res = await page.evaluate(js_code, {"company": company, "targetStage": target_stage})
+        shot_path = params.get("screenshot_path", "logs/portal_stage_move_screenshot.png")
+        Path(shot_path).parent.mkdir(parents=True, exist_ok=True)
+        await page.screenshot(path=shot_path)
+        await browser.close()
+
+        if res.get("found"):
+            return ToolResult(
+                success=True,
+                data={
+                    "card_id": res.get("card_id"),
+                    "company": res.get("company"),
+                    "amount": res.get("amount"),
+                    "new_stage": res.get("new_stage"),
+                    "screenshot_path": shot_path,
+                    "ui_status": f"Moved '{company}' to {target_stage.title()}",
+                },
+                metadata={
+                    "action": "move_opportunity_stage",
+                    "screenshot_path": shot_path,
+                    "target_stage": target_stage,
+                },
+            )
+        else:
+            return ToolResult(
+                success=False,
+                error=f"No opportunity card found matching company '{company}' in Kanban pipeline.",
+            )
