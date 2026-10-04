@@ -197,6 +197,156 @@ class Planner:
                 ],
             )
 
+        if parsed.action == "switch_view":
+            target_view = parsed.target_view or "kanban"
+            return TaskPlan(
+                goal=task,
+                steps=[
+                    PlannedStep(
+                        step_number=1,
+                        description=f"Switch web portal view to '{target_view}'",
+                        tool_name="browser_operator",
+                        tool_input={
+                            "action": "switch_portal_view",
+                            "target_view": target_view,
+                            "screenshot_path": "logs/portal_view_switch_screenshot.png",
+                        },
+                        verification_hint=f"Verify portal displays {target_view} view",
+                    ),
+                    PlannedStep(
+                        step_number=2,
+                        description="Write task audit trail and completion report",
+                        tool_name="file_writer",
+                        tool_input={
+                            "file_path": "logs/task_completion_report.md",
+                            "content": f"Successfully switched web portal view to '{target_view}'.",
+                        },
+                        depends_on=1,
+                        verification_hint="Confirm completion report exists on disk",
+                    ),
+                ],
+            )
+
+        if parsed.action == "filter_crm":
+            return TaskPlan(
+                goal=task,
+                steps=[
+                    PlannedStep(
+                        step_number=1,
+                        description="Apply interactive filter criteria to CRM pipeline",
+                        tool_name="browser_operator",
+                        tool_input={
+                            "action": "filter_opportunities",
+                            "min_amount": parsed.amount,
+                            "stage": parsed.target_stage,
+                            "search": parsed.filters.get("search"),
+                            "screenshot_path": "logs/portal_filter_screenshot.png",
+                        },
+                        verification_hint="Verify filtered deals displayed on board",
+                    ),
+                    PlannedStep(
+                        step_number=2,
+                        description="Write task audit trail and completion report",
+                        tool_name="file_writer",
+                        tool_input={
+                            "file_path": "logs/task_completion_report.md",
+                            "content": f"Applied pipeline filter: {parsed.filters}.",
+                        },
+                        depends_on=1,
+                        verification_hint="Confirm completion report exists on disk",
+                    ),
+                ],
+            )
+
+        if parsed.action == "inspect_deal":
+            company = parsed.vendor_name or "Tidewater"
+            return TaskPlan(
+                goal=task,
+                steps=[
+                    PlannedStep(
+                        step_number=1,
+                        description=f"Inspect opportunity card for '{company}' in web portal",
+                        tool_name="browser_operator",
+                        tool_input={
+                            "action": "inspect_opportunity",
+                            "company": company,
+                            "screenshot_path": "logs/portal_inspect_screenshot.png",
+                        },
+                        verification_hint=f"Verify opportunity modal opens for '{company}'",
+                    ),
+                    PlannedStep(
+                        step_number=2,
+                        description="Write task audit trail and completion report",
+                        tool_name="file_writer",
+                        tool_input={
+                            "file_path": "logs/task_completion_report.md",
+                            "content": f"Inspected details for deal '{company}'.",
+                        },
+                        depends_on=1,
+                        verification_hint="Confirm completion report exists on disk",
+                    ),
+                ],
+            )
+
+        if parsed.action == "approve_invoice":
+            inv_id = parsed.invoice_id or 87
+            return TaskPlan(
+                goal=task,
+                steps=[
+                    PlannedStep(
+                        step_number=1,
+                        description=f"Update status of invoice #{inv_id} to 'approved' in ERP system",
+                        tool_name="erp_client",
+                        tool_input={
+                            "action": "update_invoice_status",
+                            "invoice_id": inv_id,
+                            "status": "approved",
+                        },
+                        verification_hint="Verify ERP invoice status updated",
+                    ),
+                    PlannedStep(
+                        step_number=2,
+                        description="Write task audit trail and completion report",
+                        tool_name="file_writer",
+                        tool_input={
+                            "file_path": "logs/task_completion_report.md",
+                            "content": f"Invoice #{inv_id} successfully approved in ERP system.",
+                        },
+                        depends_on=1,
+                        verification_hint="Confirm completion report exists on disk",
+                    ),
+                ],
+            )
+
+        if parsed.action == "delete_invoice":
+            inv_id = parsed.invoice_id or 88
+            return TaskPlan(
+                goal=task,
+                steps=[
+                    PlannedStep(
+                        step_number=1,
+                        description=f"Remove invoice #{inv_id} from ERP system",
+                        tool_name="erp_client",
+                        tool_input={
+                            "action": "delete_invoice",
+                            "invoice_id": inv_id,
+                        },
+                        verification_hint="Verify invoice deleted",
+                    ),
+                    PlannedStep(
+                        step_number=2,
+                        description="Write task audit trail and completion report",
+                        tool_name="file_writer",
+                        tool_input={
+                            "file_path": "logs/task_completion_report.md",
+                            "content": f"Invoice #{inv_id} deleted from ERP system.",
+                        },
+                        depends_on=1,
+                        verification_hint="Confirm completion report exists on disk",
+                    ),
+                ],
+            )
+
         if not parsed.file_path:
             # Materialize a draft invoice file so that all standard audit, extraction, and HITL gates run
             draft_path = Path("logs") / "draft_invoice.json"

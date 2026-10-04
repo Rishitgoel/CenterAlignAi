@@ -70,3 +70,51 @@ def test_planner_crm_stage_plan_generation():
     step_2 = plan.steps[1]
     assert step_2.tool_name == "file_writer"
     assert "logs/task_completion_report.md" in step_2.tool_input["file_path"]
+
+
+def test_query_parser_view_switch():
+    parser = AIQueryParser(api_key=None)
+    parsed_table = parser.parse_deterministic("switch to table")
+    assert parsed_table.action == "switch_view"
+    assert parsed_table.target_view == "table"
+
+    parsed_kanban = parser.parse_deterministic("switch to kanban")
+    assert parsed_kanban.action == "switch_view"
+    assert parsed_kanban.target_view == "kanban"
+
+
+def test_query_parser_crm_filter():
+    parser = AIQueryParser(api_key=None)
+    parsed = parser.parse_deterministic("filter deals over 50000")
+    assert parsed.action == "filter_crm"
+    assert parsed.amount == 50000.0
+
+
+def test_query_parser_invoice_approval_and_deletion():
+    parser = AIQueryParser(api_key=None)
+    parsed_approve = parser.parse_deterministic("approve invoice 87")
+    assert parsed_approve.action == "approve_invoice"
+    assert parsed_approve.invoice_id == 87
+
+    parsed_delete = parser.parse_deterministic("delete invoice 88")
+    assert parsed_delete.action == "delete_invoice"
+    assert parsed_delete.invoice_id == 88
+
+
+def test_planner_software_operator_plans():
+    from agent.planner import Planner
+    planner = Planner(api_key=None)
+
+    plan_view = planner._create_heuristic_plan("switch to table")
+    assert plan_view.steps[0].tool_name == "browser_operator"
+    assert plan_view.steps[0].tool_input["action"] == "switch_portal_view"
+
+    plan_approve = planner._create_heuristic_plan("approve invoice 87")
+    assert plan_approve.steps[0].tool_name == "erp_client"
+    assert plan_approve.steps[0].tool_input["action"] == "update_invoice_status"
+    assert plan_approve.steps[0].tool_input["invoice_id"] == 87
+
+    plan_delete = planner._create_heuristic_plan("delete invoice 88")
+    assert plan_delete.steps[0].tool_name == "erp_client"
+    assert plan_delete.steps[0].tool_input["action"] == "delete_invoice"
+    assert plan_delete.steps[0].tool_input["invoice_id"] == 88

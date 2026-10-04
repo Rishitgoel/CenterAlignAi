@@ -17,7 +17,7 @@ class ERPClientTool(Tool):
         "properties": {
             "action": {
                 "type": "string",
-                "enum": ["create_invoice", "get_invoice", "search_invoices", "list_invoices"],
+                "enum": ["create_invoice", "get_invoice", "search_invoices", "list_invoices", "update_invoice_status", "delete_invoice"],
                 "description": "The specific ERP operation to perform.",
             },
             "invoice_data": {
@@ -26,7 +26,11 @@ class ERPClientTool(Tool):
             },
             "invoice_id": {
                 "type": "integer",
-                "description": "Invoice ID required for 'get_invoice'.",
+                "description": "Invoice ID required for 'get_invoice', 'update_invoice_status', and 'delete_invoice'.",
+            },
+            "status": {
+                "type": "string",
+                "description": "Status string when updating invoice (e.g. 'approved', 'verified', 'settled', 'rejected').",
             },
             "vendor_name": {
                 "type": "string",
@@ -62,10 +66,18 @@ class ERPClientTool(Tool):
                     )
                 elif action == "list_invoices":
                     return await self._list_invoices(client)
+                elif action == "update_invoice_status":
+                    return await self._update_invoice_status(
+                        client,
+                        invoice_id=params.get("invoice_id"),
+                        status=params.get("status", "approved"),
+                    )
+                elif action == "delete_invoice":
+                    return await self._delete_invoice(client, params.get("invoice_id"))
                 else:
                     return ToolResult(
                         success=False,
-                        error=f"Unsupported action: '{action}'. Allowed: create_invoice, get_invoice, search_invoices, list_invoices",
+                        error=f"Unsupported action: '{action}'. Allowed: create_invoice, get_invoice, search_invoices, list_invoices, update_invoice_status, delete_invoice",
                     )
         except httpx.ConnectError:
             return ToolResult(
@@ -169,4 +181,50 @@ class ERPClientTool(Tool):
             return ToolResult(
                 success=False,
                 error=f"List failed ({resp.status_code}): {resp.text}",
+            )
+
+    async def _update_invoice_status(self, client: httpx.AsyncClient, invoice_id: Any, status: str) -> ToolResult:
+        if invoice_id is None:
+            return ToolResult(success=False, error="Missing required parameter 'invoice_id'")
+
+        resp = await client.patch(f"/invoices/{invoice_id}/status", params={"status": status})
+        if resp.status_code == 200:
+            return ToolResult(
+                success=True,
+                data=resp.json(),
+                metadata={"status_code": 200, "invoice_id": invoice_id, "new_status": status},
+            )
+        elif resp.status_code == 404:
+            return ToolResult(
+                success=False,
+                error=f"Invoice ID {invoice_id} not found in ERP",
+                metadata={"status_code": 404},
+            )
+        else:
+            return ToolResult(
+                success=False,
+                error=f"Status update failed ({resp.status_code}): {resp.text}",
+            )
+
+    async def _delete_invoice(self, client: httpx.AsyncClient, invoice_id: Any) -> ToolResult:
+        if invoice_id is None:
+            return ToolResult(success=False, error="Missing required parameter 'invoice_id'")
+
+        resp = await client.delete(f"/invoices/{invoice_id}")
+        if resp.status_code == 200:
+            return ToolResult(
+                success=True,
+                data=resp.json(),
+                metadata={"status_code": 200, "deleted_id": invoice_id},
+            )
+        elif resp.status_code == 404:
+            return ToolResult(
+                success=False,
+                error=f"Invoice ID {invoice_id} not found in ERP",
+                metadata={"status_code": 404},
+            )
+        else:
+            return ToolResult(
+                success=False,
+                error=f"Delete failed ({resp.status_code}): {resp.text}",
             )

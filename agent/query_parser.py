@@ -22,12 +22,15 @@ from config import settings
 
 class ParsedQuery(BaseModel):
     raw_query: str
-    action: str = "create_invoice"  # "create_invoice" | "process_document" | "query_invoices" | "browser_submit" | "verify_audit" | "move_crm_stage"
+    action: str = "create_invoice"  # "create_invoice" | "process_document" | "query_invoices" | "browser_submit" | "verify_audit" | "move_crm_stage" | "switch_view" | "filter_crm" | "create_opportunity" | "inspect_deal" | "approve_invoice" | "delete_invoice" | "download_sample"
     vendor_name: Optional[str] = None
     amount: Optional[float] = None
     currency: str = "USD"
     due_date: Optional[str] = None
     invoice_number: Optional[str] = None
+    invoice_id: Optional[int] = None
+    status: Optional[str] = None
+    target_view: Optional[str] = None
     file_path: Optional[str] = None
     use_browser: bool = False
     target_stage: Optional[str] = None
@@ -39,12 +42,15 @@ class ParsedQuery(BaseModel):
 QUERY_PARSER_SYSTEM_PROMPT = """You are an expert natural language query parser for an enterprise autonomous task worker.
 Analyze the user's task instruction and output a JSON object conforming to the schema:
 {
-  "action": "create_invoice" | "process_document" | "query_invoices" | "browser_submit" | "verify_audit" | "move_crm_stage",
+  "action": "create_invoice" | "process_document" | "query_invoices" | "browser_submit" | "verify_audit" | "move_crm_stage" | "switch_view" | "filter_crm" | "create_opportunity" | "inspect_deal" | "approve_invoice" | "delete_invoice" | "download_sample",
   "vendor_name": "string or null",
   "amount": number or null,
   "currency": "USD" | "EUR" | "GBP" | "INR",
   "due_date": "YYYY-MM-DD or null",
   "invoice_number": "string or null",
+  "invoice_id": number or null,
+  "status": "string or null",
+  "target_view": "kanban" | "table" | null,
   "file_path": "string or null",
   "use_browser": boolean,
   "target_stage": "qualification" | "discovery" | "proposal" | "negotiation" | "won" | null,
@@ -116,7 +122,21 @@ class AIQueryParser:
         """Deterministic NLP regex entity extractor for enterprise queries."""
         task_lower = query.lower()
 
-        # 0. CRM Kanban Stage Movement Detection (e.g. "process tidewater to won state")
+        # 0A. File path detection FIRST (Document ingestion takes highest precedence)
+        file_match = re.search(r"([\w/\\.-]+\.(?:json|csv|txt|pdf|eml|png|jpg|jpeg))", query, re.IGNORECASE)
+        file_path = file_match.group(1) if file_match else None
+        if file_path:
+            use_browser = any(kw in task_lower for kw in ["browser", "portal", "website", "web portal", "ui", "web form", "playwright"])
+            return ParsedQuery(
+                raw_query=query,
+                action="process_document",
+                file_path=file_path,
+                use_browser=use_browser,
+                confidence=1.0,
+                parser_source="deterministic",
+            )
+
+        # 0B. CRM Kanban Stage Movement Detection (e.g. "process tidewater to won state")
         crm_stage_match = re.search(
             r"(?:process|move|advance|mark|change|transition|set)\s+([A-Za-z0-9\s&]+?)\s+(?:to|as|into)\s+(won|qualification|discovery|proposal|negotiation)\s*(?:state|stage)?",
             query,
@@ -166,6 +186,96 @@ class AIQueryParser:
                 invoice_number=f"INV-CRM-{abs(hash(query)) % 10000}",
                 use_browser=True,
                 target_stage=target_stage,
+                confidence=1.0,
+                parser_source="deterministic",
+            )
+
+        # Check view switching
+        if any(kw in task_lower for kw in ["switch to table", "show invoices table", "open accounts payable", "view ledger", "show table view", "invoices view", "switch to invoice"]):
+            return ParsedQuery(
+                raw_query=query,
+                action="switch_view",
+                target_view="table",
+                use_browser=True,
+                confidence=1.0,
+                parser_source="deterministic",
+            )
+        if any(kw in task_lower for kw in ["switch to kanban", "show pipeline", "open crm", "kanban board", "show opportunities", "crm view", "switch to pipeline"]):
+            return ParsedQuery(
+                raw_query=query,
+                action="switch_view",
+                target_view="kanban",
+                use_browser=True,
+                confidence=1.0,
+                parser_source="deterministic",
+            )
+
+        # Check sample download
+        if any(kw in task_lower for kw in ["download sample", "sample pdf", "sample invoice"]):
+            return ParsedQuery(
+                raw_query=query,
+                action="download_sample",
+                confidence=1.0,
+                parser_source="deterministic",
+            )
+
+        # Check invoice status updates (e.g. "approve invoice 87" or "approve invoice #87")
+        approve_match = re.search(r"(?:approve|settle)\s+(?:the\s+)?(?:invoice\s+)?(?:#|id\s*)?([0-9]+)\b", query, re.IGNORECASE)
+        if approve_match:
+            inv_id = int(approve_match.group(1))
+            return ParsedQuery(
+                raw_query=query,
+                action="approve_invoice",
+                invoice_id=inv_id,
+                status="approved",
+                confidence=1.0,
+                parser_source="deterministic",
+            )
+
+        # Check invoice deletion
+        delete_match = re.search(r"(?:delete|remove)\s+(?:invoice\s+)?(?:#|id\s*)?([0-9]+)", query, re.IGNORECASE)
+        if delete_match and "invoice" in task_lower:
+            inv_id = int(delete_match.group(1).strip())
+            return ParsedQuery(
+                raw_query=query,
+                action="delete_invoice",
+                invoice_id=inv_id,
+                confidence=1.0,
+                parser_source="deterministic",
+            )
+
+        # Check CRM filters
+        if "filter" in task_lower or "deals over" in task_lower or "deals greater" in task_lower:
+            min_amt = None
+            m_amt = re.search(r"(?:over|greater\s+than|>|\$)\s*([0-9]+(?:k|000)?)", query, re.IGNORECASE)
+            if m_amt:
+                raw_amt = m_amt.group(1).lower()
+                min_amt = float(raw_amt.replace("k", "")) * 1000 if "k" in raw_amt else float(raw_amt)
+            stage_filter = None
+            for st in ["qualification", "discovery", "proposal", "negotiation", "won"]:
+                if st in task_lower:
+                    stage_filter = st
+                    break
+            return ParsedQuery(
+                raw_query=query,
+                action="filter_crm",
+                amount=min_amt,
+                target_stage=stage_filter,
+                filters={"min_amount": min_amt, "stage": stage_filter},
+                use_browser=True,
+                confidence=1.0,
+                parser_source="deterministic",
+            )
+
+        # Check deal inspection
+        inspect_match = re.search(r"(?:inspect|view|show\s+details\s+for)\s+([A-Za-z0-9\s&]+?)\s*(?:deal|opportunity|card)?$", query, re.IGNORECASE)
+        if inspect_match and any(w in task_lower for w in ["inspect", "deal", "details"]):
+            target_company = inspect_match.group(1).strip().title()
+            return ParsedQuery(
+                raw_query=query,
+                action="inspect_deal",
+                vendor_name=target_company,
+                use_browser=True,
                 confidence=1.0,
                 parser_source="deterministic",
             )

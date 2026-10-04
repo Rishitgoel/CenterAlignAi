@@ -430,7 +430,7 @@
             <input 
               type="text" 
               id="ai-command-input"
-              placeholder="Ask CentrAlign AI Worker (e.g. 'Process Globex invoice' or 'Add this PDF')..."
+              placeholder="Operate software with AI (e.g. 'Switch to table', 'Filter > 50k', 'Process Tidewater to won', 'Approve #87')..."
               class="flex-1 bg-transparent border-0 text-xs font-medium text-gray-900 placeholder-stone-400 focus:outline-none focus:ring-0"
               autocomplete="off"
             />
@@ -471,32 +471,67 @@
               class="px-3.5 py-1.5 bg-gray-900 hover:bg-black text-white text-xs font-semibold rounded-md shadow-2xs flex items-center gap-1.5 transition-all active:scale-95 flex-shrink-0"
             >
               <span>🚀</span>
-              <span>Dispatch Worker</span>
+              <span>Execute with AI</span>
               <kbd class="hidden sm:inline-block ml-1 font-mono text-[9px] bg-gray-800 text-gray-300 px-1 py-0.5 rounded">↵</kbd>
             </button>
           </form>
         </div>
 
+        <!-- AI Software Operator Quick Chips -->
+        <div class="flex items-center gap-1.5 pt-2 pb-1 overflow-x-auto text-[11px] scrollbar-none">
+          <span class="text-[10px] font-semibold text-stone-400 uppercase tracking-wider flex-shrink-0 mr-1">AI Software Controls:</span>
+
+          <button type="button" onclick="executeAiSoftwareCommand('switch to table')" class="scenario-pill flex items-center gap-1 px-2.5 py-1 rounded-full border border-stone-200 bg-white hover:bg-stone-50 text-stone-700 font-medium transition-all shadow-2xs whitespace-nowrap active:scale-95">
+            <span>📊</span>
+            <span>Switch to Table</span>
+          </button>
+
+          <button type="button" onclick="executeAiSoftwareCommand('switch to kanban')" class="scenario-pill flex items-center gap-1 px-2.5 py-1 rounded-full border border-stone-200 bg-white hover:bg-stone-50 text-stone-700 font-medium transition-all shadow-2xs whitespace-nowrap active:scale-95">
+            <span>🎯</span>
+            <span>Switch to Pipeline</span>
+          </button>
+
+          <button type="button" onclick="executeAiSoftwareCommand('filter deals over 50000')" class="scenario-pill flex items-center gap-1 px-2.5 py-1 rounded-full border border-stone-200 bg-white hover:bg-stone-50 text-stone-700 font-medium transition-all shadow-2xs whitespace-nowrap active:scale-95">
+            <span>🔍</span>
+            <span>Filter &gt; $50k</span>
+          </button>
+
+          <button type="button" onclick="executeAiSoftwareCommand('process tidewater to won state')" class="scenario-pill flex items-center gap-1 px-2.5 py-1 rounded-full border border-stone-200 bg-white hover:bg-stone-50 text-stone-700 font-medium transition-all shadow-2xs whitespace-nowrap active:scale-95">
+            <span>🏆</span>
+            <span>Tidewater to Won</span>
+          </button>
+
+          <button type="button" onclick="executeAiSoftwareCommand('clear filters')" class="scenario-pill flex items-center gap-1 px-2.5 py-1 rounded-full border border-stone-200 bg-white hover:bg-stone-50 text-stone-700 font-medium transition-all shadow-2xs whitespace-nowrap active:scale-95">
+            <span>🔄</span>
+            <span>Reset Filters</span>
+          </button>
+
+          <a href="/api/demo/sample-pdf" download="invoice_cyberdyne_005.pdf" class="scenario-pill flex items-center gap-1 px-2.5 py-1 rounded-full border border-blue-200 bg-blue-50/70 hover:bg-blue-100 text-blue-800 font-semibold transition-all shadow-2xs whitespace-nowrap active:scale-95 ml-auto" title="Download sample invoice PDF to test custom upload">
+            <span>📥</span>
+            <span>Download Sample PDF</span>
+          </a>
+        </div>
+
         <!-- 5 Curated Demo Scenario Pills -->
-        <div class="flex items-center gap-1.5 pt-2 pb-0.5 overflow-x-auto text-[11px] scrollbar-none">
+        <div class="flex items-center gap-1.5 pt-1 pb-0.5 overflow-x-auto text-[11px] scrollbar-none border-t border-stone-200/50 mt-1">
           <span class="text-[10px] font-semibold text-stone-400 uppercase tracking-wider flex-shrink-0 mr-1">Demo Scenarios:</span>
           
-          <button type="button" onclick="dispatchScenario('clean')" class="scenario-pill flex items-center gap-1 px-2.5 py-1 rounded-full border border-stone-200 bg-white hover:bg-stone-50 hover:border-stone-300 text-stone-700 font-medium transition-all shadow-2xs whitespace-nowrap active:scale-95">
+          <button type="button" onclick="dispatchScenario('clean')" class="scenario-pill flex items-center gap-1 px-2.5 py-1 rounded-full border border-stone-200 bg-white hover:bg-stone-50 text-stone-700 font-medium transition-all shadow-2xs whitespace-nowrap active:scale-95">
             <span class="text-emerald-600">⚡</span>
             <span>Clean Invoice (Globex)</span>
           </button>
 
-          <button type="button" onclick="dispatchScenario('pdf')" class="scenario-pill flex items-center gap-1 px-2.5 py-1 rounded-full border border-stone-200 bg-white hover:bg-stone-50 hover:border-stone-300 text-stone-700 font-medium transition-all shadow-2xs whitespace-nowrap active:scale-95">
+          <button type="button" onclick="dispatchScenario('pdf')" class="scenario-pill flex items-center gap-1 px-2.5 py-1 rounded-full border border-stone-200 bg-white hover:bg-stone-50 text-stone-700 font-medium transition-all shadow-2xs whitespace-nowrap active:scale-95">
             <span class="text-blue-600">⚡</span>
             <span>Multimodal PDF (Cyberdyne)</span>
           </button>
 
-          <button type="button" onclick="dispatchScenario('malformed')" class="scenario-pill flex items-center gap-1 px-2.5 py-1 rounded-full border border-stone-200 bg-white hover:bg-stone-50 hover:border-stone-300 text-stone-700 font-medium transition-all shadow-2xs whitespace-nowrap active:scale-95">
+          <button type="button" onclick="dispatchScenario('malformed')" class="scenario-pill flex items-center gap-1 px-2.5 py-1 rounded-full border border-stone-200 bg-white hover:bg-stone-50 text-stone-700 font-medium transition-all shadow-2xs whitespace-nowrap active:scale-95">
             <span class="text-amber-600">⚡</span>
             <span>Self-Heal Malformed File</span>
           </button>
 
-          <button type="button" onclick="dispatchScenario('highvalue')" class="scenario-pill flex items-center gap-1 px-2.5 py-1 rounded-full border border-stone-200 bg-white hover:bg-stone-50 hover:border-stone-300 text-stone-700 font-medium transition-all shadow-2xs whitespace-nowrap active:scale-95">
+          <button type="button" onclick="dispatchScenario('highvalue')" class="scenario-pill flex items-center gap-1 px-2.5 py-1 rounded-full border border-stone-200 bg-white hover:bg-stone-50 text-stone-700 font-medium transition-all shadow-2xs whitespace-nowrap active:scale-95">
             <span class="text-red-600">⚠️</span>
             <span>High-Value Escalation ($75k)</span>
           </button>
@@ -505,11 +540,6 @@
             <span>📄</span>
             <span>Ingest Custom PDF (Interactive)</span>
           </button>
-
-          <a href="/api/demo/sample-pdf" download="invoice_cyberdyne_005.pdf" class="scenario-pill flex items-center gap-1 px-2.5 py-1 rounded-full border border-blue-200 bg-blue-50/70 hover:bg-blue-100 text-blue-800 font-semibold transition-all shadow-2xs whitespace-nowrap active:scale-95 ml-auto" title="Download sample invoice PDF to test custom upload">
-            <span>📥</span>
-            <span>Download Sample PDF</span>
-          </a>
         </div>
       </section>
 
@@ -1096,6 +1126,19 @@
       renderKanbanBoard();
     }
 
+    function resetFilters() {
+      const searchEl = document.getElementById('live-search-input');
+      if (searchEl) searchEl.value = '';
+      const stageEl = document.getElementById('filter-stage');
+      if (stageEl) stageEl.value = 'all';
+      const ownerEl = document.getElementById('filter-owner');
+      if (ownerEl) ownerEl.value = 'all';
+      currentFilterMinAmount = 0;
+      const dot = document.getElementById('filter-active-dot');
+      if (dot) dot.classList.add('hidden');
+      renderKanbanBoard();
+    }
+
     // Render Kanban Pipeline
     function renderKanbanBoard() {
       const searchQ = (document.getElementById('live-search-input')?.value || '').toLowerCase().trim();
@@ -1375,6 +1418,7 @@
 
       document.getElementById('display-menu').classList.add('hidden');
     }
+    window.switchTab = switchView;
 
     let currentInspectedCard = null;
     let draggedCardId = null;
@@ -1636,7 +1680,7 @@
       const inputEl = document.getElementById('ai-command-input');
       const text = (inputEl?.value || '').trim();
       if (!text) return;
-      submitWorkerTask(text, attachedUploadPath);
+      executeAiSoftwareCommand(text, attachedUploadPath);
     }
 
     async function handleFileSelect(e) {
@@ -1805,6 +1849,189 @@
           console.error('Command bar drop upload failed:', err);
         }
       }
+    }
+
+    // =========================================================================
+    // FULL SOFTWARE AI OPERATOR CONTROLLER
+    // Allows conversational AI & voice commands to control all software features
+    // =========================================================================
+    async function executeAiSoftwareCommand(queryText, filePath) {
+      const q = (queryText || '').trim();
+      if (!q) return;
+      const lower = q.toLowerCase();
+
+      // 1. Navigation & View Switching
+      if (/switch\s+(?:to\s+)?(?:table|ledger|invoices?|accounts?)/i.test(q) || /(?:show|view|open)\s+(?:invoices?|table|ledger|accounts?\s+payable)/i.test(q)) {
+        switchView('table');
+        showToast('✦ AI Controller: Switched view to Accounts Payable Ledger', true);
+        const inputEl = document.getElementById('ai-command-input');
+        if (inputEl) inputEl.value = '';
+        return;
+      }
+      if (/switch\s+(?:to\s+)?(?:kanban|pipeline|crm|board|opportunities?)/i.test(q) || /(?:show|view|open)\s+(?:kanban|pipeline|crm|opportunities?|board)/i.test(q)) {
+        switchView('kanban');
+        showToast('✦ AI Controller: Switched view to CRM Opportunity Pipeline', true);
+        const inputEl = document.getElementById('ai-command-input');
+        if (inputEl) inputEl.value = '';
+        return;
+      }
+      if (/(?:open|view)\s+(?:api\s+docs|swagger|documentation)/i.test(q)) {
+        window.open('/docs', '_blank');
+        showToast('✦ AI Controller: Opened API Documentation in new tab', true);
+        const inputEl = document.getElementById('ai-command-input');
+        if (inputEl) inputEl.value = '';
+        return;
+      }
+      if (/download\s+(?:sample\s+)?(?:pdf|invoice)/i.test(q)) {
+        window.location.href = '/api/demo/sample-pdf';
+        showToast('✦ AI Controller: Downloading sample invoice PDF', true);
+        const inputEl = document.getElementById('ai-command-input');
+        if (inputEl) inputEl.value = '';
+        return;
+      }
+
+      // 2. Modals & Dialogs
+      if (/open\s+(?:invoice\s+)?form|open\s+(?:record\s+)?modal|record\s+invoice/i.test(q)) {
+        openModal();
+        showToast('✦ AI Controller: Opened Record Opportunity & Invoice dialog', true);
+        const inputEl = document.getElementById('ai-command-input');
+        if (inputEl) inputEl.value = '';
+        return;
+      }
+      if (/close\s+modal|dismiss|cancel\s+dialog/i.test(q)) {
+        closeModal();
+        closeCardInspection();
+        showToast('✦ AI Controller: Closed active modal dialog', true);
+        const inputEl = document.getElementById('ai-command-input');
+        if (inputEl) inputEl.value = '';
+        return;
+      }
+      const inspectMatch = q.match(/(?:inspect|view\s+details\s+for|show\s+deal\s+for)\s+([A-Za-z0-9\s&]+?)(?:\s+deal|\s+opportunity|\s+card)?$/i);
+      if (inspectMatch && (lower.includes('inspect') || lower.includes('details') || lower.includes('deal'))) {
+        const co = inspectMatch[1].trim().toLowerCase();
+        const matched = dynamicCards.find(c => (c.company && c.company.toLowerCase().includes(co)) || (c.title && c.title.toLowerCase().includes(co)));
+        if (matched) {
+          inspectCard(matched.id);
+          showToast(`✦ AI Controller: Opened details for ${matched.company || matched.title}`, true);
+          const inputEl = document.getElementById('ai-command-input');
+          if (inputEl) inputEl.value = '';
+          return;
+        }
+      }
+
+      // 3. Filters & Searching
+      if (/(?:clear|reset)\s+(?:all\s+)?filters?|show\s+all\s+(?:deals|records|pipeline)/i.test(q)) {
+        resetFilters();
+        showToast('✦ AI Controller: Reset all pipeline filters', true);
+        const inputEl = document.getElementById('ai-command-input');
+        if (inputEl) inputEl.value = '';
+        return;
+      }
+      const filterAmtMatch = q.match(/(?:filter\s+(?:deals\s+)?)?(?:over|greater\s+than|>|\$)\s*([0-9]+(?:k|000)?)/i);
+      if (filterAmtMatch && (lower.includes('over') || lower.includes('greater') || lower.includes('filter'))) {
+        const rawAmt = filterAmtMatch[1].toLowerCase();
+        const numAmt = rawAmt.endsWith('k') ? parseFloat(rawAmt.replace('k', '')) * 1000 : parseFloat(rawAmt);
+        setAmountFilter(numAmt);
+        showToast(`✦ AI Controller: Filtered deals with minimum value $${numAmt.toLocaleString()}`, true);
+        const inputEl = document.getElementById('ai-command-input');
+        if (inputEl) inputEl.value = '';
+        return;
+      }
+      const stageFilterMatch = q.match(/(?:filter\s+(?:by\s+)?|show\s+only\s+)(qualification|discovery|proposal|negotiation|won)/i);
+      if (stageFilterMatch) {
+        const stg = stageFilterMatch[1].toLowerCase();
+        const el = document.getElementById('filter-stage');
+        if (el) {
+          el.value = stg;
+          filterAllRecords();
+          showToast(`✦ AI Controller: Filtered pipeline to stage '${stg.toUpperCase()}'`, true);
+          const inputEl = document.getElementById('ai-command-input');
+          if (inputEl) inputEl.value = '';
+          return;
+        }
+      }
+      const searchMatch = q.match(/(?:search|find)\s+(?:for\s+)?([A-Za-z0-9\s&]+?)(?:\s+in\s+pipeline|\s+deals)?$/i);
+      if (searchMatch && !lower.includes('invoice') && !lower.includes('process') && !lower.includes('move')) {
+        const term = searchMatch[1].trim();
+        const el = document.getElementById('live-search-input');
+        if (el) {
+          el.value = term;
+          filterAllRecords();
+          showToast(`✦ AI Controller: Searching pipeline for '${term}'`, true);
+          const inputEl = document.getElementById('ai-command-input');
+          if (inputEl) inputEl.value = '';
+          return;
+        }
+      }
+
+      // 4. Invoices Management (Approve, Delete, Refresh)
+      const approveMatch = q.match(/(?:approve|verify|settle)\s+(?:invoice\s+)?#?([0-9]+)/i);
+      if (approveMatch && (lower.includes('invoice') || q.includes('#') || lower.includes('approve'))) {
+        const invId = approveMatch[1];
+        try {
+          const res = await fetch(`/invoices/${invId}/status?status=approved`, { method: 'PATCH' });
+          if (res.ok) {
+            await fetchInvoices();
+            showToast(`✦ AI Controller: Invoice #${invId} approved in company ERP`, true);
+            const inputEl = document.getElementById('ai-command-input');
+            if (inputEl) inputEl.value = '';
+            return;
+          }
+        } catch (e) {
+          console.error(e);
+        }
+      }
+      const deleteMatch = q.match(/(?:delete|remove)\s+(?:invoice\s+)?#?([0-9]+)/i);
+      if (deleteMatch && (lower.includes('invoice') || q.includes('#'))) {
+        const invId = deleteMatch[1];
+        try {
+          const res = await fetch(`/invoices/${invId}`, { method: 'DELETE' });
+          if (res.ok) {
+            await fetchInvoices();
+            showToast(`✦ AI Controller: Invoice #${invId} removed from ERP`, true);
+            const inputEl = document.getElementById('ai-command-input');
+            if (inputEl) inputEl.value = '';
+            return;
+          }
+        } catch (e) {
+          console.error(e);
+        }
+      }
+      if (/refresh\s+(?:data|invoices?|ledger|system)/i.test(q)) {
+        await fetchInvoices();
+        showToast('✦ AI Controller: Synchronized live ERP and CRM records', true);
+        const inputEl = document.getElementById('ai-command-input');
+        if (inputEl) inputEl.value = '';
+        return;
+      }
+
+      // 5. Direct Opportunity Creation
+      const createDealMatch = q.match(/(?:create|add|new)\s+(?:deal|opportunity)\s+(?:for\s+)?([A-Za-z0-9\s&]+?)\s+(?:with|for|\$)?\s*([0-9]+(?:k|000)?)\s*(?:in\s+(qualification|discovery|proposal|negotiation|won))?/i);
+      if (createDealMatch) {
+        const coName = createDealMatch[1].trim();
+        const rawAmt = createDealMatch[2].toLowerCase();
+        const amt = rawAmt.endsWith('k') ? parseFloat(rawAmt.replace('k', '')) * 1000 : parseFloat(rawAmt);
+        const targetStg = (createDealMatch[3] || 'qualification').toLowerCase();
+        const newCard = {
+          id: 'card-' + Date.now(),
+          title: `${coName} — Strategic Engagement`,
+          company: coName,
+          amount: amt,
+          due_date: new Date(Date.now() + 30 * 86400000).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+          owner: 'CentrAlign Agent',
+          owner_initials: 'CA',
+          stage: targetStg
+        };
+        dynamicCards.unshift(newCard);
+        renderKanbanBoard();
+        showToast(`✦ AI Controller: Created new deal for ${coName} ($${amt.toLocaleString()}) in ${targetStg.toUpperCase()}`, true);
+        const inputEl = document.getElementById('ai-command-input');
+        if (inputEl) inputEl.value = '';
+        return;
+      }
+
+      // 6. Stage Progression & Comprehensive Tasks: Dispatch to background worker
+      submitWorkerTask(q, filePath);
     }
 
     async function submitWorkerTask(taskText, filePath) {

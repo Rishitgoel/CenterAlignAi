@@ -17,7 +17,7 @@ class BrowserOperatorTool(Tool):
         "properties": {
             "action": {
                 "type": "string",
-                "enum": ["enter_invoice_form", "extract_table", "take_screenshot", "move_opportunity_stage"],
+                "enum": ["enter_invoice_form", "extract_table", "take_screenshot", "move_opportunity_stage", "switch_portal_view", "filter_opportunities", "inspect_opportunity"],
                 "description": "Browser automation action to execute.",
             },
             "url": {
@@ -87,6 +87,17 @@ class BrowserOperatorTool(Tool):
 
                 elif action == "extract_table":
                     return await self._extract_table(page)
+
+                elif action == "switch_portal_view":
+                    target_view = params.get("target_view", "kanban")
+                    return await self._switch_portal_view(page, target_view, params, browser)
+
+                elif action == "filter_opportunities":
+                    return await self._filter_opportunities(page, params, browser)
+
+                elif action == "inspect_opportunity":
+                    company = params.get("company") or params.get("vendor_name") or "Tidewater"
+                    return await self._inspect_opportunity(page, company, params, browser)
 
                 elif action == "take_screenshot":
                     shot_path = params.get("screenshot_path", "logs/portal_screenshot.png")
@@ -275,3 +286,78 @@ class BrowserOperatorTool(Tool):
                 success=False,
                 error=f"No opportunity card found matching company '{company}' in Kanban pipeline.",
             )
+
+    async def _switch_portal_view(self, page, target_view: str, params: Dict[str, Any], browser) -> ToolResult:
+        js = "view => { if (typeof switchTab === 'function') { switchTab(view); return true; } return false; }"
+        ok = await page.evaluate(js, target_view)
+        shot_path = params.get("screenshot_path", "logs/portal_view_switch_screenshot.png")
+        Path(shot_path).parent.mkdir(parents=True, exist_ok=True)
+        await page.screenshot(path=shot_path)
+        await browser.close()
+
+        return ToolResult(
+            success=ok,
+            data={"target_view": target_view, "screenshot_path": shot_path},
+            metadata={"action": "switch_portal_view", "target_view": target_view},
+        )
+
+    async def _filter_opportunities(self, page, params: Dict[str, Any], browser) -> ToolResult:
+        js = """
+        filters => {
+            if (filters.min_amount !== undefined && typeof setAmountFilter === 'function') {
+                setAmountFilter(filters.min_amount);
+            }
+            if (filters.stage && document.getElementById('stage-filter')) {
+                document.getElementById('stage-filter').value = filters.stage;
+                if (typeof filterOpportunities === 'function') filterOpportunities();
+            }
+            if (filters.search && document.getElementById('search-input')) {
+                document.getElementById('search-input').value = filters.search;
+                if (typeof filterOpportunities === 'function') filterOpportunities();
+            }
+            return { applied: true };
+        }
+        """
+        res = await page.evaluate(js, params)
+        shot_path = params.get("screenshot_path", "logs/portal_filter_screenshot.png")
+        Path(shot_path).parent.mkdir(parents=True, exist_ok=True)
+        await page.screenshot(path=shot_path)
+        await browser.close()
+
+        return ToolResult(
+            success=True,
+            data={"filters": params, "screenshot_path": shot_path},
+            metadata={"action": "filter_opportunities"},
+        )
+
+    async def _inspect_opportunity(self, page, company: str, params: Dict[str, Any], browser) -> ToolResult:
+        js = """
+        comp => {
+            const co = (comp || '').toLowerCase();
+            const matched = dynamicCards.find(c => 
+                (c.company && c.company.toLowerCase().includes(co)) || 
+                (c.title && c.title.toLowerCase().includes(co))
+            );
+            if (matched && typeof inspectCard === 'function') {
+                inspectCard(matched.id);
+                return { found: true, id: matched.id, company: matched.company, amount: matched.amount };
+            }
+            return { found: false };
+        }
+        """
+        res = await page.evaluate(js, company)
+        shot_path = params.get("screenshot_path", "logs/portal_inspect_screenshot.png")
+        Path(shot_path).parent.mkdir(parents=True, exist_ok=True)
+        await page.screenshot(path=shot_path)
+        await browser.close()
+
+        if res.get("found"):
+            return ToolResult(
+                success=True,
+                data={**res, "screenshot_path": shot_path},
+                metadata={"action": "inspect_opportunity", "company": company},
+            )
+        return ToolResult(
+            success=False,
+            error=f"No opportunity card found matching company '{company}' for inspection.",
+        )
