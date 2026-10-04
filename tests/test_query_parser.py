@@ -37,9 +37,9 @@ def test_query_parser_deterministic_file_ingestion():
 def test_query_parser_model_cascade_order():
     parser = AIQueryParser(api_key="mock_key")
     assert parser.model_cascade == [
+        "gemini-3.5-flash-lite",
         "gemini-2.5-flash",
         "gemini-2.5-flash-lite",
-        "gemini-3.5-flash-lite",
     ]
 
 

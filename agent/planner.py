@@ -58,9 +58,9 @@ class Planner:
         self._client: Optional[genai.Client] = None
         # Multi-model cascade: primary high-reasoning model with low-cost & high-throughput backups
         self.model_cascade = [
+            "gemini-3.5-flash-lite",
             "gemini-2.5-flash",
             "gemini-2.5-flash-lite",
-            "gemini-3.5-flash-lite",
         ]
         self.query_parser = AIQueryParser(api_key=self.api_key)
 
@@ -77,7 +77,7 @@ class Planner:
     ) -> TaskPlan:
         client = self._get_client()
 
-        # If LLM client is available, attempt cascade: gemini-2.5-flash -> gemini-2.5-flash-lite -> gemini-3.5-flash-lite
+        # If LLM client is available, attempt cascade: gemini-3.5-flash-lite -> gemini-2.5-flash -> gemini-2.5-flash-lite
         if client:
             user_prompt = (
                 f"AVAILABLE TOOLS:\n{tools_description}\n\n"

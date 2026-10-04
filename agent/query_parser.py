@@ -61,9 +61,9 @@ class AIQueryParser:
         self.api_key = api_key or settings.gemini_api_key
         self._client: Optional[genai.Client] = None
         self.model_cascade = [
+            "gemini-3.5-flash-lite",
             "gemini-2.5-flash",
             "gemini-2.5-flash-lite",
-            "gemini-3.5-flash-lite",
         ]
 
     def _get_client(self) -> Optional[genai.Client]:

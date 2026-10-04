@@ -96,26 +96,30 @@ class DocumentExtractorTool(Tool):
                 file_bytes = path.read_bytes()
 
                 import asyncio
-                # Call Gemini with multimodal document bytes (async with 5s timeout)
-                response = await asyncio.wait_for(
-                    client.aio.models.generate_content(
-                        model="gemini-2.5-flash",
-                        contents=[
-                            types.Part.from_bytes(data=file_bytes, mime_type=mime_type),
-                            DOCUMENT_PROMPT,
-                        ],
-                    ),
-                    timeout=5.0,
-                )
-                raw_text = response.text or ""
-                parsed = self._clean_json(raw_text)
-                if parsed and parsed.get("vendor_name"):
-                    return ToolResult(
-                        success=True,
-                        data=parsed,
-                        metadata={"file_path": str(path), "extractor": "gemini-2.5-flash", "multimodal": True},
-                    )
-            except Exception as e:
+                # Multi-model cascade: gemini-3.5-flash-lite primary, gemini-2.5-flash secondary
+                for model_candidate in ["gemini-3.5-flash-lite", "gemini-2.5-flash", "gemini-2.5-flash-lite"]:
+                    try:
+                        response = await asyncio.wait_for(
+                            client.aio.models.generate_content(
+                                model=model_candidate,
+                                contents=[
+                                    types.Part.from_bytes(data=file_bytes, mime_type=mime_type),
+                                    DOCUMENT_PROMPT,
+                                ],
+                            ),
+                            timeout=5.0,
+                        )
+                        raw_text = response.text or ""
+                        parsed = self._clean_json(raw_text)
+                        if parsed and parsed.get("vendor_name"):
+                            return ToolResult(
+                                success=True,
+                                data=parsed,
+                                metadata={"file_path": str(path), "extractor": model_candidate, "multimodal": True},
+                            )
+                    except Exception:
+                        continue
+            except Exception:
                 # Fallback to local heuristic extraction
                 pass
 

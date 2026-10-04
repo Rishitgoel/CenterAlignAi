@@ -55,6 +55,25 @@ async def init_db():
                     "INSERT INTO vendors (name, contact_email, payment_terms) VALUES (?, ?, ?)",
                     vendors,
                 )
+
+        # Seed initial invoices if empty (minimal default set: 2 records)
+        async with conn.execute("SELECT COUNT(*) as count FROM invoices") as cursor:
+            row = await cursor.fetchone()
+            if row and row["count"] == 0:
+                from datetime import datetime, timezone
+                now = datetime.now(timezone.utc).isoformat()
+                demo_invoices = [
+                    ("Acme Corp", "INV-2024-001", 1500.00, "USD", "2026-10-15", "approved", "[]", "Consulting Services - December", now),
+                    ("Globex Corporation", "GLX-7892", 3250.75, "USD", "2026-10-30", "verified", "[]", "Q3 Cloud Infrastructure Support", now),
+                ]
+                await conn.executemany(
+                    """
+                    INSERT INTO invoices (
+                        vendor_name, invoice_number, amount, currency, due_date, status, line_items_json, notes, created_at
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    """,
+                    demo_invoices,
+                )
         await conn.commit()
 
 

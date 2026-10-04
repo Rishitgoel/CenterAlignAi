@@ -20,8 +20,6 @@ def teardown_module():
         samples = [
             ("Acme Corp", "INV-2024-001", 1500.00, "USD", "2026-10-15", "approved", "[]", "Consulting Services - December", now),
             ("Globex Corporation", "GLX-7892", 3250.75, "USD", "2026-10-30", "verified", "[]", "Q3 Cloud Infrastructure Support", now),
-            ("Cyberdyne Systems", "CS-2026-881", 4850.00, "USD", "2026-11-15", "pending", "[]", "Neural Net Training Cluster Subscriptions", now),
-            ("Initech", "INIT-2026-99", 2100.50, "USD", "2026-11-20", "pending", "[]", "Quarterly TPS Software Licenses", now),
         ]
         async with aiosqlite.connect(settings.database_path) as conn:
             for inv in samples:
